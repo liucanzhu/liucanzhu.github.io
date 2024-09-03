@@ -79,9 +79,19 @@
   <div class="article-inner">
     
     
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/02/hello-world/">rust 学习笔记一 环境搭建</a>
+    </h1>
+  
+
+      </header>
+    
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h1 id="rust-学习笔记一-环境搭建"><a href="#rust-学习笔记一-环境搭建" class="headerlink" title="rust 学习笔记一 环境搭建"></a>rust 学习笔记一 环境搭建</h1><p>rust有内存安全、静态类型和并发安全几大特性，同时在命令行工具  、wasm、 网络服务以及嵌入式设备方面有较广泛的应用， 本篇是rust学习的第一篇笔记</p>
+        <p>rust有内存安全、静态类型和并发安全几大特性，同时在命令行工具  、wasm、 网络服务以及嵌入式设备方面有较广泛的应用， 本篇是rust学习的第一篇笔记</p>
 <p>接下来主要介绍rust开发的第一步，环境搭建，主要分为以下几个步骤:</p>
 <h3 id="（一）-安装rust"><a href="#（一）-安装rust" class="headerlink" title="（一） 安装rust"></a>（一） 安装rust</h3><p>这里通过rustup下载Rust，这是一个管理Rust版本和相关工具的命令行工具，终端执行：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ curl --proto <span class="string">&#x27;=https&#x27;</span> --tlsv1.2 -sSf https: / /sh.rustup.rs | sh</span><br></pre></td></tr></table></figure>
@@ -95,7 +105,7 @@
 <p><strong>Even Better TOML</strong>(支持toml文件)  </p>
 <p><strong>crates</strong>(rust包管理，目前已经失效，根据官方推荐使用<strong>Dependi</strong>代替)</p>
 <h3 id="（三）-第一个应用程序"><a href="#（三）-第一个应用程序" class="headerlink" title="（三） 第一个应用程序"></a>（三） 第一个应用程序</h3><p>创建新的空目录，创建程序文件main.rs ：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">	println!(<span class="string">&quot;hello world!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    println!(<span class="string">&quot;hello world!&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>在命令行输入<code>rustc main.rs</code>进行编译，然后在同级目录下可以得到名为main.exe的执行文件， 继续输入<code>./main.exe</code>可以执行它得到输出“hello world!”</p>
 <h3 id="（四）-cargo（推荐使用）"><a href="#（四）-cargo（推荐使用）" class="headerlink" title="（四） cargo（推荐使用）"></a>（四） cargo（推荐使用）</h3><p>可直接使用cargo进行创建新项目：在控制台输入<code>cargo new projectName</code>可得到一个如图1-2所示的完整的初始化项目目录.</p>
 <p><img src="/../assets/img/menu1.jpg" alt="图1-2" title="menu1"></p>
@@ -113,7 +123,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2024/09/02/hello-world/" data-id="cm0le5kwj0000s8uyh4m9gs8t" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2024/09/02/hello-world/" data-id="cm0mi309q0000vkuy8vw13vsz" data-title="rust 学习笔记一 环境搭建" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -156,7 +166,7 @@
       <ul>
         
           <li>
-            <a href="/2024/09/02/hello-world/">(no title)</a>
+            <a href="/2024/09/02/hello-world/">rust 学习笔记一 环境搭建</a>
           </li>
         
       </ul>
