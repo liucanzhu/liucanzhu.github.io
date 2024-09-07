@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记五 Rust中的数据类型 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本篇主要讲解一下rust中的数据类型，主要从以下几个方面进行讲解：基础数据类型，整形，浮点，字符，序列，类型强制转换 （一）rust类型概览rust中的主要类型如下图所示：    （二）整型根据数据的大小，我们可以将有符号和无符号整数类型进—步分类为不同的类别:其中固定的有8, 16, 32, 64, 128位，在前面加i或者u表示是否有符号，不固定的有isize 和 usize, 在不同架构上不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记五 Rust中的数据类型">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/09/08/rust5/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="本篇主要讲解一下rust中的数据类型，主要从以下几个方面进行讲解：基础数据类型，整形，浮点，字符，序列，类型强制转换 （一）rust类型概览rust中的主要类型如下图所示：    （二）整型根据数据的大小，我们可以将有符号和无符号整数类型进—步分类为不同的类别:其中固定的有8, 16, 32, 64, 128位，在前面加i或者u表示是否有符号，不固定的有isize 和 usize, 在不同架构上不">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-1.png">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-2.png">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-3.png">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-4.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-5.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/5-6.jpg">
+<meta property="article:published_time" content="2024-09-07T17:19:56.729Z">
+<meta property="article:modified_time" content="2024-09-07T17:31:12.777Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/5-1.png">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust5" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/08/rust5/" class="article-date">
+  <time class="dt-published" datetime="2024-09-07T17:19:56.729Z" itemprop="datePublished">2024-09-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记五 Rust中的数据类型
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本篇主要讲解一下rust中的数据类型，主要从以下几个方面进行讲解：<strong>基础数据类型，整形，浮点，字符，序列，<br>类型强制转换</strong></p>
+<h3 id="（一）rust类型概览"><a href="#（一）rust类型概览" class="headerlink" title="（一）rust类型概览"></a>（一）rust类型概览</h3><p>rust中的主要类型如下图所示：</p>
+<p><img src="/../assets/img/5-1.png" alt="图5-1" title="5-1"></p>
+<p><img src="/../assets/img/5-2.png" alt="图5-2" title="5-2"></p>
+<p><img src="/../assets/img/5-3.png" alt="图5-3" title="5-3"></p>
+<h3 id="（二）整型"><a href="#（二）整型" class="headerlink" title="（二）整型"></a>（二）整型</h3><p>根据数据的大小，我们可以将有符号和无符号整数类型进—步分类为不同的类别:其中固定的有8, 16, 32, 64, 128位，在前面加i或者u表示是否有符号，不固定的有isize 和 usize, <strong>在不同架构上不一样</strong>，<br>在rust中定义整形默认是32位，此外，在rust中如果数字或者字符太长时，可以用_进行分隔使其更易读，表达的意思是一样的，比如：</p>
+<p><img src="/../assets/img/5-4.jpg" alt="图5-4" title="5-4"></p>
+<h3 id="（三）浮点型"><a href="#（三）浮点型" class="headerlink" title="（三）浮点型"></a>（三）浮点型</h3><p>浮点类型数字是带有小数点的数字,在Rust中浮点类型也有两种基本类型:f32和f64,分别为32位和64位大小。默认浮点类型是f64,在现代的CPU中它的速度与f32几乎相同,但精度更高。<br>由于二进制和十进制之间的转换不是完全精确的，很多十进制小数在转换为二进制时会变成无限循环小数，这导致它们不能被精确地表示，比如在rust 中直接判断 0.1 + 0.2 是否等于0.3，<strong>二者并不会直接相等</strong>，当你执行 0.1 + 0.2 时，你实际上是在计算两个不精确的值的和，结果也是一个不精确的值。这个结果可能非常接近 0.3，但由于精度限制，它可能不完全等于 0.3.最准确的表达方式是<strong>在误差范围内二者相等</strong><br>如下所示：</p>
+<p><img src="/../assets/img/5-5.jpg" alt="图5-5" title="5-5"></p>
+<h3 id="（四）NAN"><a href="#（四）NAN" class="headerlink" title="（四）NAN"></a>（四）NAN</h3><p>对于数学上未定义的结果,如负数开平方根,Rust的浮点数类型会使用NaN(Not a Number)来处理这些情况。任何与NaN进行交互的操作都会返回NaN,并且NaN不能用于比较(如断言),这会导致程序崩溃。<br>在rust中，可以通过<code>is_nan</code>方法来判断一个元素是否有效</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> v = (-1.1_f64).sqrt();</span><br><span class="line"><span class="keyword">if</span> v.<span class="function"><span class="title">is_nan</span></span>() &#123;</span><br><span class="line">    <span class="built_in">print</span>!(<span class="string">&quot;v is nan&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="（五）布尔类型"><a href="#（五）布尔类型" class="headerlink" title="（五）布尔类型"></a>（五）布尔类型</h3><p>Rust中的布尔类型有两个可能的值:true和false,布尔值占用内存的大小为1个字节</p>
+<h3 id="（六）序列"><a href="#（六）序列" class="headerlink" title="（六）序列"></a>（六）序列</h3><p>Rust提供了一个非常简洁的方式,用来生成连续的数值,例如1..5,生成从1到4的连续数字,不包含5;1.&#x3D;5,生成从1到5的连续数字,包含5,它的用途很简单,常常用于循环中<br>除了在之前文章中提到的用于数字的循环外，也可以用于字符的循环，比如：</p>
+<p><img src="/../assets/img/5-6.jpg" alt="图5-6" title="5-6"></p>
+<h3 id="七-类型强制转换"><a href="#七-类型强制转换" class="headerlink" title="(七)类型强制转换"></a>(七)类型强制转换</h3><p>在Rust中,<strong>as关键字</strong>用于在原始类型(如i64、f64、u64、char等)之间进行类型转换。然而,需要注意的是,as关健字并<strong>不适用于复合类型</strong>,比如String或其他用户定义的类型。对于复合类型的转换,通常需要使用其他方法或函数。<br>示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = 5;</span><br><span class="line"><span class="built_in">let</span> f = a as f32;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/08/rust5/" data-id="cm0sf9tq40004sguy12ez38ys" data-title="rust 学习笔记五 Rust中的数据类型" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/09/06/rust4/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记四 Rust中的流程控制</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/09/08/rust5/">rust 学习笔记五 Rust中的数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/06/rust4/">rust 学习笔记四 Rust中的流程控制</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/05/rust3/">rust 学习笔记三 Rust中的函数</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/04/rust2/">rust 学习笔记二 变量与可变性</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/02/rust1/">rust 学习笔记一 环境搭建</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
