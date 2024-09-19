@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记十一 Rust 中的结构体 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="（一）结构体的定义使用struct关键字并为整个结构体提供一个名字，结构体的定义的位置没有要求,实例化的作用域在定义的范围内即可，大括号中,定义每一部分数据的名字和类型,称为字段(field)使用逗号分隔每个字段 示例： 123456struct Rectangle &#123;    width:u32,    height: u32,&#125;  有以下注意事项： 1、初始化结构体时每一个字">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记十一 Rust 中的结构体">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/09/20/rust11/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="（一）结构体的定义使用struct关键字并为整个结构体提供一个名字，结构体的定义的位置没有要求,实例化的作用域在定义的范围内即可，大括号中,定义每一部分数据的名字和类型,称为字段(field)使用逗号分隔每个字段 示例： 123456struct Rectangle &#123;    width:u32,    height: u32,&#125;  有以下注意事项： 1、初始化结构体时每一个字">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/11-1.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/11-2.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/11-3.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/11-4.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/11-5.jpg">
+<meta property="article:published_time" content="2024-09-19T16:20:24.066Z">
+<meta property="article:modified_time" content="2024-09-19T16:23:35.029Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/11-1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust11" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/20/rust11/" class="article-date">
+  <time class="dt-published" datetime="2024-09-19T16:20:24.066Z" itemprop="datePublished">2024-09-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记十一 Rust 中的结构体
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）结构体的定义"><a href="#（一）结构体的定义" class="headerlink" title="（一）结构体的定义"></a>（一）结构体的定义</h3><p>使用struct关键字并为整个结构体提供一个名字，结构体的定义的位置没有要求,实例化的作用域在定义的范围内即可，大括号中,定义每一部分数据的名字和类型,称为字段(field)<br>使用逗号分隔每个字段</p>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">struct Rectangle &#123;</span><br><span class="line">    width:u32,</span><br><span class="line">    height: u32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>有以下注意事项：</p>
+<p>1、初始化结构体时<strong>每一个字段都必须初始化</strong></p>
+<p>2、字段赋值顺序和定义顺序<strong>不需要一致</strong></p>
+<p>3、字段名使用逗号分局</p>
+<p>4、结构体中变量名和实际变量名一样的时候，可以只写一个</p>
+<p>如果两个结构体实例的属性高度重合，也可以选择复用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="built_in">let</span> user2 = User&#123;</span><br><span class="line">    email:String::from(<span class="string">&quot;someone2@example.com&quot;</span>),</span><br><span class="line">    ..user1</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>这种方法叫结构体更新语法</p>
+<p>RUST的访问：通过实例. 属性名的方式，修改：需要将实例修改为<strong>mut</strong></p>
+<h3 id="（二）结构体分类"><a href="#（二）结构体分类" class="headerlink" title="（二）结构体分类"></a>（二）结构体分类</h3><p>1.元组结构体(TupleStruct)</p>
+<p>结构体必须要有名称,但是结构体的字段可以没有名称,这种结构体长得很像元组,因此被称为元组结构体，元组结构体<strong>希望有一个整体名称,但是又不关心里面字段的的名称</strong>时将非常有用.</p>
+<p>例如Point元组结构体,众所周知3D点是(x,y,z)形式的坐标点,因此我们无需再为内部的字段逐一命名为:x,y,z</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">struct Color(i32,i32,i32);</span><br><span class="line">struct Point(i32,i32,i32);</span><br><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="built_in">let</span> black=Color(0,0,0);</span><br><span class="line">    <span class="built_in">let</span> origin=Point(0,0,0);</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;,&#123;&#125;&quot;</span>,black.0,origin.1)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>2.单元结构体(Unit-like Struct)</p>
+<p>如果你定义一个类型,但是<strong>不关心该类型的内容,只关心它的行为</strong>时,就可以使用单元结构体,定义AlwaysEqual,我们使用 struct关键字,接着是我们想要的名称,然后是一个分号<br>实例化不需要花括号或圆括号!</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">struct AlwaysEqual;</span><br><span class="line"><span class="built_in">let</span> subject=AlwaysEqual;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="（三）所有权"><a href="#（三）所有权" class="headerlink" title="（三）	所有权"></a>（三）	所有权</h3><p><img src="/../assets/img/11-1.jpg" alt="图11-1" title="11-1"></p>
+<p><img src="/../assets/img/11-2.jpg" alt="图11-2" title="11-2"></p>
+<p>从上面两个例子可以看出：对struct中的两个不同属性进行赋值有不同结果，active仍然可以正常打印但是email却会报错，这是因为active是bool类型，实现了copy trait，赋值过程并不会发生所有权的移动，但email 却是没有实现copy特性的类型，所以<strong>发生了所有权的转移</strong>.</p>
+<p><img src="/../assets/img/11-3.jpg" alt="图11-3" title="11-3"></p>
+<p>在这个例子中，当结构体中有一个元素发生了所有权的转移，之后将这个结构体作为参数进行传递时，也会报错，因此可以得出结论：<strong>一旦字结构体中一个字段发生了所有权移动,那么整个结构体就不能再被腻值了</strong>，同样，在前文中提到的结构体实例复用，如果发生了未实现copy trait类型的值的复用，也会发生所有权转移：</p>
+<p><img src="/../assets/img/11-4.jpg" alt="图11-4" title="11-4"></p>
+<p>如果我们将类型String 替换为 &amp;str,是不是就可以实现赋值了呢，发现有报错提示：需要生命周期参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">struct User&lt;<span class="string">&#x27;a&gt;&#123;</span></span><br><span class="line"><span class="string">    active:bool,</span></span><br><span class="line"><span class="string">    username: &amp;&#x27;</span>a str,</span><br><span class="line">    email:&amp;<span class="string">&#x27;a str,</span></span><br><span class="line"><span class="string">    sign_in_count: u64,</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+<p>根据提示添加生命周期参数后,可以正常执行</p>
+<h3 id="（四）方法"><a href="#（四）方法" class="headerlink" title="（四）	方法"></a>（四）	方法</h3><p>定义方法：使用<strong>fn关键字和名称声明</strong>,可以拥有参数和返回值,同时包含在某处调用该方法时会执行的代码。方法与函数是不同的,因为它们<strong>在结构体的上下文中被定义</strong>,并且它门<strong>第一个参数总是self,它代表调用该方法的结构体实例.</strong></p>
+<p>定义方法和enum类似:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">#[derive(Debug)]</span></span><br><span class="line">struct Rectangle &#123;</span><br><span class="line">    width: u32,</span><br><span class="line">    height: u32,</span><br><span class="line">&#125;</span><br><span class="line">impl Rectangle &#123;</span><br><span class="line">fn area(&amp;self) -&gt; u32 &#123;</span><br><span class="line">self.width * self.height</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line"><span class="built_in">let</span> rect1=Rectangle&#123;width:30,height:50&#125;;</span><br><span class="line">    println!(<span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">    rect1.area());</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>同时要修改实例的值的话，也可以在方法中使用可变引用：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">#[derive(Debug)]</span></span><br><span class="line">struct Rectangle &#123;</span><br><span class="line">    width: u32,</span><br><span class="line">    height: u32,</span><br><span class="line">&#125;</span><br><span class="line">impl Rectangle &#123;</span><br><span class="line">    fn area(&amp;self) -&gt; u32 &#123;</span><br><span class="line">        self.width * self.height</span><br><span class="line">    &#125;</span><br><span class="line">    fn setWidth(&amp;mut self, newWidth:u32) &#123;</span><br><span class="line">        self.width = newWidth; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line"><span class="built_in">let</span> mut rect1=Rectangle&#123;width:30,height:50&#125;;</span><br><span class="line">    rect1.setWidth(20);</span><br><span class="line">    println!(<span class="string">&quot;The area of the rectangle is &#123;&#125; square pixels.&quot;</span>,</span><br><span class="line">    rect1.area());</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>除了这种自带实例引用的方法外，还有一种不带实例引用的方法，和enum中的静态方法一样，只能通过结构体名称::方法名的格式来调用：如下：</p>
+<p><img src="/../assets/img/11-5.jpg" alt="图11-5" title="11-5"></p>
+<h3 id="（五）实现trait"><a href="#（五）实现trait" class="headerlink" title="（五）	实现trait"></a>（五）	实现trait</h3><p>为类型实现特征</p>
+<p>如果不同的类型具有相同的行为,那么我们就可以定义一个特征,然后为这些类型实现该特征,定义特征是把一些方法组合在一起,目的是定义一个实现某些目际所必需的行为的集合.</p>
+<p>像下面这样：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">trait Shape&#123;</span><br><span class="line">    fn area(&amp;self) -&gt; f64;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">#[derive(Debug)]</span></span><br><span class="line"></span><br><span class="line">struct Rectangle &#123;</span><br><span class="line">    width:u32,</span><br><span class="line">    height: u32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct  Circle &#123;</span><br><span class="line">    r: f64</span><br><span class="line">&#125;</span><br><span class="line">impl Shape <span class="keyword">for</span> Rectangle &#123;</span><br><span class="line">    fn area(&amp;self) -&gt; f64 &#123;</span><br><span class="line">        (self.width * self.height) as f64</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Shape <span class="keyword">for</span>  Circle&#123;</span><br><span class="line">    fn area(&amp;self) -&gt; f64 &#123;</span><br><span class="line">        (self.r * self.r * 3.14) as f64</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn print_area(shape: &amp;impl Shape)&#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,shape.area());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> cir1 = Circle&#123;r:1.0&#125;;</span><br><span class="line">    print_area(&amp;cir1);</span><br><span class="line">    <span class="built_in">let</span> rec1 = Rectangle&#123;width:1, height:2&#125;;</span><br><span class="line">    print_area(&amp;rec1);</span><br><span class="line">&#125;</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<p>类型Circle和 类型 Rectangle 都需要实现求面积的方法，于是写了一个名为Shape的trait，其中的方法area需要在Circle 和 Rectangle分别实现，最后在函数print_area中传入结构体实例的引用，会自动根据类型匹配到对用的方法执行</p>
+<h3 id="（六）打印结构体"><a href="#（六）打印结构体" class="headerlink" title="（六）	打印结构体"></a>（六）	打印结构体</h3><p>直接使用如下方式进行打印：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> cir1 = Circle&#123;r:1.0&#125;;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,cir1);</span><br></pre></td></tr></table></figure>
+
+<p>依然是报错：该类型没有实现display这个trait</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,cir1);</span><br></pre></td></tr></table></figure>
+
+<p>改为这样还是报错：该类型没有实现debug这个trait,解决办法是在相应的结构体定义上方加上<code>#[derive(Debug)]</code>派生</p>
+<p>我们也可以不使用派生而是自己实现这些特征：</p>
+<p>a.Display:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">impl Display <span class="keyword">for</span> Rectangle &#123;</span><br><span class="line">    fn <span class="built_in">fmt</span>(&amp;self, f: &amp;mut std::<span class="built_in">fmt</span>::Formatter&lt;<span class="string">&#x27;_&gt;) -&gt; std::fmt::Result &#123;</span></span><br><span class="line"><span class="string">        for _ in 0..self.height &#123;</span></span><br><span class="line"><span class="string">            let mut s =  String::new();</span></span><br><span class="line"><span class="string">            for _ in 0..self.width &#123;</span></span><br><span class="line"><span class="string">                s.push(&#x27;</span>#<span class="string">&#x27;)</span></span><br><span class="line"><span class="string">            &#125;</span></span><br><span class="line"><span class="string">            write!(f, &quot;&#123;&#125;\n&quot;, s);</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">        return  Ok(());</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+<p>b.Debug:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">impl  Debug <span class="keyword">for</span> Circle &#123;</span><br><span class="line">    fn <span class="built_in">fmt</span>(&amp;self, f: &amp;mut std::<span class="built_in">fmt</span>::Formatter&lt;<span class="string">&#x27;_&gt;) -&gt; std::fmt::Result &#123;</span></span><br><span class="line"><span class="string">        let _ = f.debug_struct(&quot;Circle&quot;)</span></span><br><span class="line"><span class="string">        .field(&quot;r&quot;, &amp;self.r)</span></span><br><span class="line"><span class="string">        .finish();</span></span><br><span class="line"><span class="string">        return  Ok(());</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br><span class="line"><span class="string"></span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/20/rust11/" data-id="cm19i4pqj0000louya52f0m2m" data-title="rust 学习笔记十一 Rust 中的结构体" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/09/15/rust10/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记十 Rust 中的ENUM</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/09/20/rust11/">rust 学习笔记十一 Rust 中的结构体</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/15/rust10/">rust 学习笔记十 Rust 中的ENUM</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/13/rust9/">rust 学习笔记九 Rust 中的字符串</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/12/rust8/">rust 学习笔记八 Rust 中的数组与切片</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/10/rust7/">rust 学习笔记七 Rust 中的引用</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
