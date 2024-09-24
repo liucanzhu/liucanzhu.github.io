@@ -69,6 +69,73 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/05/rust3/" class="article-date">
+  <time class="dt-published" datetime="2024-09-05T14:06:06.672Z" itemprop="datePublished">2024-09-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/05/rust3/">rust 学习笔记三 Rust中的函数</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>总结一下rust中常见的函数使用方式</p>
+<p>首先标准示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn fn_name(i:<span class="built_in">type</span>, j:<span class="built_in">type</span>) -&gt; return_type&#123;</span><br><span class="line">    //...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有以下注意事项:.</p>
+<p>需要在每个参数后面<strong>声明参数类型</strong>，并在函数体前面加上<strong>返回值类型</strong>.</p>
+<p>函数的定义和调用位置没有固定顺序.</p>
+<p>且函数名<strong>不能用数字开头</strong>.</p>
+<p>对于函数体中的返回值，有以下两种写法：</p>
+<p>常规写法：.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn immutable(i:i32, j:i32) -&gt; i32&#123;</span><br><span class="line">    <span class="built_in">return</span> i + j;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以及不带return 和 分号，直接写返回值:.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn immutable(i:i32, j:i32) -&gt; i32&#123;</span><br><span class="line">   i + j</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果一个函数没有返回值，则可以<strong>在返回类型处用（）</strong>表示:.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn immutable(i:i32, j:i32)-&gt;()&#123;</span><br><span class="line">   println!(<span class="string">&quot;i + j == &#123;&#125;&quot;</span>,i + j);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或者直接<strong>去掉返回值部分</strong>:.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn immutable(i:i32, j:i32)&#123;</span><br><span class="line">   println!(<span class="string">&quot;i + j == &#123;&#125;&quot;</span>,i + j);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此外，对于预期会死循环和抛出错误的函数，可以在返回类型处用感叹号表示:.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">fn immutable()-&gt;!&#123;</span><br><span class="line">   loop &#123;</span><br><span class="line">       //...</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/05/rust3/" data-id="cm0sf9tq10001sguy5yajdczp" data-title="rust 学习笔记三 Rust中的函数" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/04/rust2/" class="article-date">
@@ -251,7 +318,11 @@
       <ul>
         
           <li>
-            <a href="/2024/09/21/rust12/">rust 学习笔记十二 Rust 中的模式匹配</a>
+            <a href="/2024/09/24/rust13/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
           </li>
         
           <li>
@@ -264,10 +335,6 @@
         
           <li>
             <a href="/2024/09/13/rust9/">rust 学习笔记九 Rust 中的字符串</a>
-          </li>
-        
-          <li>
-            <a href="/2024/09/12/rust8/">rust 学习笔记八 Rust 中的数组与切片</a>
           </li>
         
       </ul>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记十三 Rust 中的集合 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Rust中的集合主要分为两类， Vector和HashMap （一）Vector1.什么是VecVec是一个动态数组,可以根据需要动态增长和缩小。适用于需要按顺序存储数据的场景 2.Vec的基本操作a.创建和初始化 123456789fn main() &#123;    &#x2F;&#x2F;创建空vec    let v : Vec&lt;i32&gt; &#x3D; Vec::new();    &#x2F;&#x2F;使用宏来创建vec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记十三 Rust 中的集合">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/09/24/rust13/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="Rust中的集合主要分为两类， Vector和HashMap （一）Vector1.什么是VecVec是一个动态数组,可以根据需要动态增长和缩小。适用于需要按顺序存储数据的场景 2.Vec的基本操作a.创建和初始化 123456789fn main() &#123;    &#x2F;&#x2F;创建空vec    let v : Vec&lt;i32&gt; &#x3D; Vec::new();    &#x2F;&#x2F;使用宏来创建vec">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-1.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-2.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-3.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-4.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-5.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-6.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-7.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/13-8.jpg">
+<meta property="article:published_time" content="2024-09-23T17:27:48.596Z">
+<meta property="article:modified_time" content="2024-09-24T14:29:56.844Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/13-1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust13" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/24/rust13/" class="article-date">
+  <time class="dt-published" datetime="2024-09-23T17:27:48.596Z" itemprop="datePublished">2024-09-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记十三 Rust 中的集合
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Rust中的集合主要分为两类， Vector和HashMap</p>
+<h3 id="（一）Vector"><a href="#（一）Vector" class="headerlink" title="（一）Vector"></a>（一）Vector</h3><h4 id="1-什么是Vec"><a href="#1-什么是Vec" class="headerlink" title="1.什么是Vec"></a>1.什么是Vec</h4><p>Vec是一个<strong>动态数组,可以根据需要动态增长和缩小</strong>。适用于需要按顺序存储数据的场景</p>
+<h4 id="2-Vec的基本操作"><a href="#2-Vec的基本操作" class="headerlink" title="2.Vec的基本操作"></a>2.Vec的基本操作</h4><p>a.创建和初始化</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    //创建空vec</span><br><span class="line">    <span class="built_in">let</span> v : Vec&lt;i32&gt; = Vec::new();</span><br><span class="line"></span><br><span class="line">    //使用宏来创建vec</span><br><span class="line">    <span class="built_in">let</span> v = vec![1,2,3,4,5];</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>b.添加元素</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="built_in">let</span> mut v : Vec&lt;i32&gt; = Vec::new();</span><br><span class="line">v.push(1);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>首先将其改为mut，然后向其中push即可</p>
+<p>c.访问元素</p>
+<p>可以使用<strong>直接引用</strong>访问：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> first: &amp;i32 = &amp;v[0];</span><br></pre></td></tr></table></figure>
+
+<p>也可以使用<strong>get方法</strong>进行获取</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">match v.get(0) &#123;</span><br><span class="line">    Some(i) =&gt; &#123;&#125;,</span><br><span class="line">    _=&gt;&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为get 获取到的元素是option类型的，所以需要match进行解构</p>
+<p>但是第一种方法当访问的元素下标超出了数组长度时会panic</p>
+<p>d.修改元素</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">v[0] = 10;</span><br></pre></td></tr></table></figure>
+
+<p>首先也需要声明数组为mut，然后直接对对应元素赋值就行</p>
+<p>e.遍历元素</p>
+<p>引用遍历：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> &amp;v &#123;</span><br><span class="line">        println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,i);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果不使用引用直接遍历会<strong>导致所有权发生转移</strong></p>
+<h4 id="3-Vec的进阶用法"><a href="#3-Vec的进阶用法" class="headerlink" title="3.Vec的进阶用法"></a>3.Vec的进阶用法</h4><p>a. 使用枚举存储多种类型</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">enum SpreadheetCell &#123;</span><br><span class="line">    Int(i32),</span><br><span class="line">    Float(f64),</span><br><span class="line">    Test(String)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>b. 容量与重新分配</p>
+<p><img src="/../assets/img/13-1.jpg" alt="图13-1" title="13-1"></p>
+<p>可以发现，在向数组中push 元素前后，数组的容量<strong>并没有发生变化</strong>，都等于初始化时设定的容量，因为当向数组中添加的元素长度小于此值时，数组并不会扩容，<strong>如果我们设置初始容量为0，就会发现每次push元素都会导致容量的扩张</strong></p>
+<h4 id="4-Vec的常见陷阱"><a href="#4-Vec的常见陷阱" class="headerlink" title="4.Vec的常见陷阱"></a>4.Vec的常见陷阱</h4><p>a. 不安全的索引访问</p>
+<p>指索引下标不能超过数组长度-1</p>
+<p>b. 可变引用与不可变引用的混用</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut v = vec![1,2,3,4,5];</span><br><span class="line"></span><br><span class="line"><span class="built_in">let</span> first = &amp;v[0];</span><br><span class="line"></span><br><span class="line">v.push(4);</span><br><span class="line"></span><br><span class="line">println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,first);</span><br></pre></td></tr></table></figure>
+
+<p>在这种情况下，会报错所有权发生了转移，不再属于first.无法打印，因为<strong>first是动态数组的非可变引用，而v是动态数组的可变引用， 理论上可变引用和非可变引用不能同时存在</strong></p>
+<p>要解决这个问题，可以将</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut v = vec![1,2,3,4,5];</span><br><span class="line"></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">let</span> first = &amp;v[0];</span><br><span class="line">    println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,first);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">v.push(4);</span><br></pre></td></tr></table></figure>
+
+<p>不可变引用部分的代码单独放到一个作用域中</p>
+<h3 id="（二）HashMap"><a href="#（二）HashMap" class="headerlink" title="（二）	HashMap"></a>（二）	HashMap</h3><h4 id="1-什么是HashMap"><a href="#1-什么是HashMap" class="headerlink" title="1.什么是HashMap"></a>1.什么是HashMap</h4><p>HashMap是一个键值对(key-value)存储的数据结构, 适用于<strong>需要快速查找数据的场景</strong>,（时间复杂度O(1)）</p>
+<h4 id="2-HashMap的基本操作"><a href="#2-HashMap的基本操作" class="headerlink" title="2. HashMap的基本操作"></a>2. HashMap的基本操作</h4><p>a.创建和初始化</p>
+<p><img src="/../assets/img/13-2.jpg" alt="图13-2" title="13-2"></p>
+<p>b.访问元素</p>
+<p><img src="/../assets/img/13-3.jpg" alt="图13-3" title="13-3"></p>
+<p>可以看出HashMap的get函数需要传入key的引用，而且<strong>得到的元素是Option类型，需要通过match解析</strong></p>
+<p>c.遍历元素</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (team, score) <span class="keyword">in</span> &amp;scores &#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;:&#123;&#125;&quot;</span>,team,score);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Hashmap的引用自身实现了一个<strong>迭代器</strong></p>
+<h4 id="3-HashMap的进阶用法"><a href="#3-HashMap的进阶用法" class="headerlink" title="3. HashMap的进阶用法"></a>3. HashMap的进阶用法</h4><p>a.更新哈希表</p>
+<p><img src="/../assets/img/13-4.jpg" alt="图13-4" title="13-4"></p>
+<p>由此可以看出更新HashMap也可以用insert</p>
+<p><img src="/../assets/img/13-5.jpg" alt="图13-5" title="13-5"></p>
+<p>由此可以看出更新HashMap也可以用entry（key）.or_insert(value)的格式进行更改，只不过当key存在时，值不会发生变化，当key不存在时，会进行添加，如果需要用这个函数对已知值进行修改：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> _entry = scores.entry(String::from(<span class="string">&quot;Red&quot;</span>)).or_insert(99);</span><br><span class="line"> *_entry *= 10;</span><br></pre></td></tr></table></figure>
+
+<p>则需要先拿到对应值的引用（该函数的返回值就是对应值的引用），然后解构修改</p>
+<p>b.合并哈希表</p>
+<p><img src="/../assets/img/13-6.jpg" alt="图13-6" title="13-6"></p>
+<h4 id="4-HashMap的常见陷阱"><a href="#4-HashMap的常见陷阱" class="headerlink" title="4. HashMap的常见陷阱"></a>4. HashMap的常见陷阱</h4><p>a. 哈希冲突</p>
+<p><img src="/../assets/img/13-7.jpg" alt="图13-7" title="13-7"></p>
+<p>由此可见，不同的两个值的hash是不一样的</p>
+<p>b值的所有权问题</p>
+<p><img src="/../assets/img/13-8.jpg" alt="图13-8" title="13-8"></p>
+<p>由此可见，当参数被传入函数insert中之后，发生了所有权的转移，之前的参数将不再有效，此时如果需要继续使用参数，需要在传入函数时使用clone():</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">map.insert(field_name.clone(), field_value.clone());</span><br></pre></td></tr></table></figure>
+
+<h3 id="附："><a href="#附：" class="headerlink" title="附："></a>附：</h3><ol>
+<li>使用Vec实现一个简单的栈，实现一个简单的栈(后进先出,LIFO)数据结构,支持push、pop和peek操作。</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#[derive(Debug)]</span></span><br><span class="line">struct VecA&#123;</span><br><span class="line">    vec:Vec&lt;i32&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl VecA &#123;</span><br><span class="line">    fn new(vec:Vec&lt;i32&gt;) -&gt; VecA&#123;</span><br><span class="line">        VecA &#123; vec: vec &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn add(&amp;mut self, num: i32) &#123;</span><br><span class="line">        self.vec.push(num)</span><br><span class="line">    &#125; </span><br><span class="line"></span><br><span class="line">    fn delete(&amp;mut self) -&gt; Option&lt;i32&gt;&#123;</span><br><span class="line">        self.vec.pop()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn peek(&amp; self, index:usize) -&gt; Option&lt;&amp;i32&gt; &#123;</span><br><span class="line">        self.vec.get(index)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> mut rect1=VecA::new(vec![1,2,3]);</span><br><span class="line">    println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,rect1);</span><br><span class="line">    rect1.add(1);</span><br><span class="line">    println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,rect1);</span><br><span class="line">    <span class="built_in">let</span> s = rect1.delete();</span><br><span class="line">    match s &#123;</span><br><span class="line">        Some(value) =&gt; &#123;</span><br><span class="line">            println!(<span class="string">&quot;删除的最后一个元素是：&#123;&#125;&quot;</span>,value);</span><br><span class="line">        &#125;</span><br><span class="line">        None =&gt; &#123;println!(<span class="string">&quot;已经没有元素&quot;</span>);&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">let</span> num = rect1.peek(0);</span><br><span class="line">    match num &#123;</span><br><span class="line">        Some(value) =&gt; &#123;</span><br><span class="line">            println!(<span class="string">&quot;&#123;&#125;&quot;</span>,value);</span><br><span class="line">        &#125;</span><br><span class="line">        None =&gt; &#123;println!(<span class="string">&quot;不存在该元素&quot;</span>);&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    println!(<span class="string">&quot;&#123;:?&#125;&quot;</span>,rect1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2:使用HashMap实现一个字频统计器,编写一个程序,统计一个字符串中每个单词出现的频率。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">use std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> text = <span class="string">&quot;hello world&quot;</span>;</span><br><span class="line">    <span class="built_in">let</span> mut frequency_counter = HashMap::new();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> character <span class="keyword">in</span> text.<span class="function"><span class="title">chars</span></span>() &#123;</span><br><span class="line">            *frequency_counter.entry(character).or_insert(0) += 1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (character, frequency) <span class="keyword">in</span> &amp;frequency_counter &#123;</span><br><span class="line">        println!(<span class="string">&quot;&#123;&#125;: &#123;&#125;&quot;</span>, character, frequency);</span><br><span class="line">    &#125;</span><br><span class="line">&#125; </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>综合练习:使用Vec和HashMap实现一个简单的书籍库存管理系统</li>
+</ol>
+<p>实现一个书籍库存管理系统,可以添加书籍、查询库存、更新库存以及删除书籍</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">use std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">struct BookInventory &#123;</span><br><span class="line">    inventory: HashMap&lt;String, i32&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl BookInventory &#123;</span><br><span class="line">    fn new() -&gt; BookInventory &#123;</span><br><span class="line">        BookInventory &#123;</span><br><span class="line">            inventory: HashMap::new(),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn add_book(&amp;mut self, title: String, quantity: i32) &#123;</span><br><span class="line">        *self.inventory.entry(title).or_insert(0) += quantity;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn get_count(&amp;self, title: &amp;str) -&gt; i32 &#123;</span><br><span class="line">        *self.inventory.get(title).unwrap_or(&amp;0)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn update_count(&amp;mut self, title: String, quantity: i32) &#123;</span><br><span class="line">        self.inventory.insert(title, quantity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn delete_book(&amp;mut self, title: &amp;str) &#123;</span><br><span class="line">        self.inventory.remove(title);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn list_books(&amp;self) &#123;</span><br><span class="line">        <span class="keyword">for</span> (title, &amp;quantity) <span class="keyword">in</span> &amp;self.inventory &#123;</span><br><span class="line">            println!(<span class="string">&quot;Title: &#123;&#125;, Quantity: &#123;&#125;&quot;</span>, title, quantity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> mut inventory = BookInventory::new();</span><br><span class="line"></span><br><span class="line">    inventory.add_book(<span class="string">&quot;The Rust Programming Language&quot;</span>.to_string(), 10);</span><br><span class="line">    inventory.add_book(<span class="string">&quot;Programming Rust&quot;</span>.to_string(), 5);</span><br><span class="line"></span><br><span class="line">    println!(<span class="string">&quot;Initial inventory:&quot;</span>);</span><br><span class="line">    inventory.list_books();</span><br><span class="line"></span><br><span class="line">    println!(<span class="string">&quot;\nStock count for &#x27;The Rust Programming Language&#x27;:&quot;</span>);</span><br><span class="line">    println!(<span class="string">&quot;Count: &#123;&#125;&quot;</span>, inventory.get_count(<span class="string">&quot;The Rust Programming Language&quot;</span>));</span><br><span class="line"></span><br><span class="line">    inventory.update_count(<span class="string">&quot;Programming Rust&quot;</span>.to_string(), 10);</span><br><span class="line"></span><br><span class="line">    println!(<span class="string">&quot;\nUpdated inventory:&quot;</span>);</span><br><span class="line">    inventory.list_books();</span><br><span class="line"></span><br><span class="line">    inventory.delete_book(<span class="string">&quot;Programming Rust&quot;</span>);</span><br><span class="line"></span><br><span class="line">    println!(<span class="string">&quot;\nFinal inventory:&quot;</span>);</span><br><span class="line">    inventory.list_books();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/24/rust13/" data-id="cm1gj9sqq0000x0uy0izleek2" data-title="rust 学习笔记十三 Rust 中的集合" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/09/21/rust12/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记十三 Rust 中的集合</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/09/24/rust13/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/20/rust11/">rust 学习笔记十一 Rust 中的结构体</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/15/rust10/">rust 学习笔记十 Rust 中的ENUM</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/13/rust9/">rust 学习笔记九 Rust 中的字符串</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   
   
-  <title>rust 学习笔记十二 Rust 中的模式匹配 | canzhu&#39;s blog</title>
+  <title>rust 学习笔记十三 Rust 中的集合 | canzhu&#39;s blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="（一）介绍与概述什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。 为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。 举例： 12345678910fn main() &#123;    let number &#x3D; 13;    match number &#123;    1&#x3D;&gt;println!(&quot;One!&quot;)">
+  <meta name="description" content="Rust中的集合主要分为两类， Vector和HashMap （一）Vector什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。 为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。 举例： 12345678910fn main() &#123;    let number &#x3D; 13;    match number &#123;">
 <meta property="og:type" content="article">
-<meta property="og:title" content="rust 学习笔记十二 Rust 中的模式匹配">
+<meta property="og:title" content="rust 学习笔记十三 Rust 中的集合">
 <meta property="og:url" content="https://liucanzhu.github.io/2024/09/21/rust12/index.html">
 <meta property="og:site_name" content="canzhu&#39;s blog">
-<meta property="og:description" content="（一）介绍与概述什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。 为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。 举例： 12345678910fn main() &#123;    let number &#x3D; 13;    match number &#123;    1&#x3D;&gt;println!(&quot;One!&quot;)">
+<meta property="og:description" content="Rust中的集合主要分为两类， Vector和HashMap （一）Vector什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。 为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。 举例： 12345678910fn main() &#123;    let number &#x3D; 13;    match number &#123;">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://liucanzhu.github.io/assets/img/12-1.jpg">
 <meta property="og:image" content="https://liucanzhu.github.io/assets/img/12-3.jpg">
@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://liucanzhu.github.io/assets/img/12-7.jpg">
 <meta property="og:image" content="https://liucanzhu.github.io/assets/img/12-6.jpg">
 <meta property="article:published_time" content="2024-09-21T09:29:21.620Z">
-<meta property="article:modified_time" content="2024-09-21T14:27:13.950Z">
+<meta property="article:modified_time" content="2024-09-23T17:40:02.521Z">
 <meta property="article:author" content="Liu Canzhu">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/12-1.jpg">
@@ -93,7 +93,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      rust 学习笔记十二 Rust 中的模式匹配
+      rust 学习笔记十三 Rust 中的集合
     </h1>
   
 
@@ -101,7 +101,8 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h3 id="（一）介绍与概述"><a href="#（一）介绍与概述" class="headerlink" title="（一）介绍与概述"></a>（一）介绍与概述</h3><p>什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。</p>
+        <p>Rust中的集合主要分为两类， Vector和HashMap</p>
+<h3 id="（一）Vector"><a href="#（一）Vector" class="headerlink" title="（一）Vector"></a>（一）Vector</h3><p>什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。</p>
 <p>为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。</p>
 <p>举例：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> number = 13;</span><br><span class="line">    match number &#123;</span><br><span class="line">    1=&gt;println!(<span class="string">&quot;One!&quot;</span>),</span><br><span class="line">    2=&gt;println!(<span class="string">&quot;Two!&quot;</span>),</span><br><span class="line">    3=&gt;println! (<span class="string">&quot;Three!&quot;</span>),</span><br><span class="line">    _=&gt;println!(<span class="string">&quot;Something else!&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
@@ -187,7 +188,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/21/rust12/" data-id="cm1bybu85000020uy38i6b4c5" data-title="rust 学习笔记十二 Rust 中的模式匹配" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="https://liucanzhu.github.io/2024/09/21/rust12/" data-id="cm1bybu85000020uy38i6b4c5" data-title="rust 学习笔记十三 Rust 中的集合" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -196,6 +197,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/2024/09/24/rust13/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          rust 学习笔记十三 Rust 中的集合
+        
+      </div>
+    </a>
   
   
     <a href="/2024/09/20/rust11/" id="article-nav-older" class="article-nav-link-wrap">
@@ -238,7 +248,11 @@
       <ul>
         
           <li>
-            <a href="/2024/09/21/rust12/">rust 学习笔记十二 Rust 中的模式匹配</a>
+            <a href="/2024/09/24/rust13/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
           </li>
         
           <li>
@@ -251,10 +265,6 @@
         
           <li>
             <a href="/2024/09/13/rust9/">rust 学习笔记九 Rust 中的字符串</a>
-          </li>
-        
-          <li>
-            <a href="/2024/09/12/rust8/">rust 学习笔记八 Rust 中的数组与切片</a>
           </li>
         
       </ul>
