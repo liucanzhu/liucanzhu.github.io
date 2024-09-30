@@ -69,6 +69,87 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust4" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/06/rust4/" class="article-date">
+  <time class="dt-published" datetime="2024-09-06T15:26:21.339Z" itemprop="datePublished">2024-09-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/06/rust4/">rust 学习笔记四 Rust中的流程控制</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>今天主要从以下两个方面讲解以下Rust中的流程控制: <strong>条件控制，循环语句</strong>.</p>
+<h2 id="（一）条件控制"><a href="#（一）条件控制" class="headerlink" title="（一）条件控制"></a>（一）条件控制</h2><p>示例如下：.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">    <span class="built_in">let</span> number = 3;</span><br><span class="line">    <span class="keyword">if</span> number % 4 == 0 &#123;</span><br><span class="line">        println!(<span class="string">&quot;number is divisible by 4&quot;</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> number % 3 == 0 &#123;</span><br><span class="line">        println!(<span class="string">&quot;number is divisible by 3&quot;</span>)</span><br><span class="line">    &#125;<span class="keyword">else</span> <span class="keyword">if</span> number % 2 == 0&#123;</span><br><span class="line">        println!(<span class="string">&quot;number is divisible by 2&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>关键字后直接加结果为bool值的表达式即可.</p>
+<p>除此之外，有一个rust的特性，可将条件语句直接绑定在变量上，示例如下：.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = <span class="keyword">if</span> condition  &#123;</span><br><span class="line">    6</span><br><span class="line">&#125;<span class="keyword">else</span> &#123;</span><br><span class="line">    5 + 2</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>直接在条件语句中返回了不同情况下a的初始值，由于这本质上是个赋值语句，所以需要在条件语句后面<strong>加上一个分号</strong>，条件语句中的返回值可以是数值也可以是算式</p>
+<h2 id="（二）循环语句"><a href="#（二）循环语句" class="headerlink" title="（二）循环语句"></a>（二）循环语句</h2><p>Rust中的循环语句分为以下几种</p>
+<h3 id="1：loop循环"><a href="#1：loop循环" class="headerlink" title="1：loop循环."></a>1：loop循环.</h3><p>示例一如下：.</p>
+<p><img src="/../assets/img/4-1.jpg" alt="图4-1" title="4-1"></p>
+<p>这是一个最简单的loop循环，直接通过loop包裹即可.</p>
+<p>示例二如下：.</p>
+<p><img src="/../assets/img/4-2.jpg" alt="图4-2" title="4-2"></p>
+<p>可以看出loop循环中 continue 关键字和 break 关键字的作用，其中 continue 关键字可以<strong>跳过当前循环</strong>，break关键字可以<strong>终止当前循环</strong>.</p>
+<p>除此之外，loop循环也可以用来给变量初始化值：.</p>
+<p><img src="/../assets/img/4-3.jpg" alt="图4-3" title="4-3"></p>
+<p>可以看出来在break处的计算结果最后被赋值给了result.</p>
+<p>示例三如下：.</p>
+<p><img src="/../assets/img/4-4.jpg" alt="图4-4" title="4-4"></p>
+<p>这是一个loop的嵌套循环，里面的loop在执行到目标值后就会退出，但是<strong>不影响外层循环一直执行</strong>,如果想在内层循环结束时结束外层循环，可以按如下所示操作：.</p>
+<p><img src="/../assets/img/4-5.jpg" alt="图4-5" title="4-5"></p>
+<p>在最外层循环处注册一个 <strong>’名字</strong>, 然后在内层循环<strong>break时候加上该名字</strong>即可</p>
+<h3 id="2：while循环"><a href="#2：while循环" class="headerlink" title="2：while循环"></a>2：while循环</h3><p>示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> a != 10 &#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,a);</span><br><span class="line">    a += 1;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>While 循环和loop 循环有很多相似之处,但是while更适用于有明确目标的循环（更简洁）.</p>
+<h3 id="3：for循环"><a href="#3：for循环" class="headerlink" title="3：for循环"></a>3：for循环</h3><p>示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = [10, 20, 30, 40];</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> a &#123;</span><br><span class="line">   println!(<span class="string">&quot;&#123;&#125;&quot;</span>,i);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>也可以快速创建一个类似range的循环：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">for</span> e <span class="keyword">in</span> (1..4) &#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,e);</span><br><span class="line">&#125;   </span><br></pre></td></tr></table></figure>
+
+<p>这样可以得到一个从1到3的循环，如果在这种情况下想要包括4，则需要将 **(1..4)改为(1..&#x3D;4)**，则得到一个1到4的循环，此外，可以继续修改，得到另外的循环，比如将(1..4)改为(1..4).iter().rev()，就能得到一个在原基础上逆序的循环.</p>
+<h3 id="4-所有权转移"><a href="#4-所有权转移" class="headerlink" title="4: 所有权转移"></a>4: 所有权转移</h3><p>先看下面例子：.</p>
+<p><img src="/../assets/img/4-6.jpg" alt="图4-6" title="4-6"></p>
+<p>在循环执行完之后，直接访问vec的元素，发现报错，此vec的<strong>所有权已经在执行循环时发生了转移</strong>，所以为了避免这种情况，我们在执行循环时，应该写成.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> &amp;v &#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此时通过地址引用，只是在<strong>借用vec的所有权</strong>，所以在循环执行完之后依然能访问vec的元素.</p>
+<p>此外，如果想要在访问的过程中修改vec的元素则需要向如下这样.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> e <span class="keyword">in</span> &amp;mut v &#123;</span><br><span class="line">    <span class="keyword">if</span> *e == 1&#123;</span><br><span class="line">        *e = 2;</span><br><span class="line">    &#125;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先将v改为mut，然后访问具体元素时在e前面加上 *号 ，表示直接访问元素而不是地址，最后得到修改后的vec.</p>
+<p>但是如果此时遍历的不是一个vec而是一个数组：.</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut  v = [1,2,3];</span><br><span class="line"><span class="keyword">for</span>  e <span class="keyword">in</span>  v &#123;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,e);</span><br><span class="line">&#125;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,v[0]); </span><br></pre></td></tr></table></figure>
+<p>却可以正常访问，因为<strong>数组是实现了copy属性的类型</strong>，在遍历的过程中并<strong>不会发生所有权的转移</strong>，而是直接进行了<strong>数据的拷贝</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/06/rust4/" data-id="cm0sf9tq30003sguye66dfmj7" data-title="rust 学习笔记四 Rust中的流程控制" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/05/rust3/" class="article-date">
@@ -318,6 +399,10 @@
       <ul>
         
           <li>
+            <a href="/2024/09/28/rust14/">rust 学习笔记十四 Rust 的返回值与错误处理</a>
+          </li>
+        
+          <li>
             <a href="/2024/09/24/rust13/">rust 学习笔记十三 Rust 中的集合</a>
           </li>
         
@@ -331,10 +416,6 @@
         
           <li>
             <a href="/2024/09/15/rust10/">rust 学习笔记十 Rust 中的ENUM</a>
-          </li>
-        
-          <li>
-            <a href="/2024/09/13/rust9/">rust 学习笔记九 Rust 中的字符串</a>
           </li>
         
       </ul>
