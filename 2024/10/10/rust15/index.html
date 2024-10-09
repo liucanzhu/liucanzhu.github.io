@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记十五 Rust 的模块化 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="（一）	概念1. packages一项cargo特性，可让您构建、测试和共享crates, 一个packages可以包含多个binary crates和可选的lib crates。至少包含一个crate Packages的基础结构如图所示：  其中bin目录下存放的就是多个binary crates，通过cargo new创建的项目就是一个标准的package结构，如果在创建时使用cargo ne">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记十五 Rust 的模块化">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/10/10/rust15/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="（一）	概念1. packages一项cargo特性，可让您构建、测试和共享crates, 一个packages可以包含多个binary crates和可选的lib crates。至少包含一个crate Packages的基础结构如图所示：  其中bin目录下存放的就是多个binary crates，通过cargo new创建的项目就是一个标准的package结构，如果在创建时使用cargo ne">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/15-1.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/15-2.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/15-3.jpg">
+<meta property="article:published_time" content="2024-10-09T16:17:15.815Z">
+<meta property="article:modified_time" content="2024-10-09T16:23:23.804Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/15-1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust15" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/10/rust15/" class="article-date">
+  <time class="dt-published" datetime="2024-10-09T16:17:15.815Z" itemprop="datePublished">2024-10-10</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记十五 Rust 的模块化
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）	概念"></a>（一）	概念</h3><h4 id="1-packages"><a href="#1-packages" class="headerlink" title="1. packages"></a>1. packages</h4><p>一项cargo特性，可让您<strong>构建、测试和共享crates</strong>, 一个packages可以包含多个binary crates和可选的lib crates。至少包含一个crate</p>
+<p>Packages的基础结构如图所示：</p>
+<p><img src="/../assets/img/15-1.jpg" alt="图15-1" title="15-1"></p>
+<p>其中bin目录下存放的就是多个binary crates，通过<code>cargo new</code>创建的项目就是一个标准的package结构，如果在创建时使用<code>cargo new –lib name</code>, 创建出的src目录下的主文件就是lib.rs(正常情况下是main.rs)像这样创建出的package就是只有单个crate，这两种crate分别叫<strong>binary crate和lib crate</strong>，区别在于binary crate是可以直接通过cargo run 执行的，而lib则不能</p>
+<h4 id="2-crates"><a href="#2-crates" class="headerlink" title="2. crates"></a>2. crates</h4><p>生成库或可执行文件的module tree, 刚才有提到，crates分为binary crate 和 library crate，一般情况下有一个lib crate,项目的bin目录下包含多个binary crate</p>
+<h4 id="3-modules-and-use"><a href="#3-modules-and-use" class="headerlink" title="3. modules and use"></a>3. modules and use</h4><p>控制路径的组织、范围和隐私</p>
+<p>在一个crate中可以包含多个module</p>
+<p>首先是module的声明</p>
+<h5 id="a-使用mod关键字："><a href="#a-使用mod关键字：" class="headerlink" title="a. 使用mod关键字："></a>a. 使用mod关键字：</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>模块中可以定义方法, 同时模块也支持嵌套：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    mod b &#123;</span><br><span class="line">        fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当需要在同crate中的main函数访问mod中的方法时, 需要通过双冒号调用：</p>
+<p><img src="/../assets/img/15-2.jpg" alt="图15-2" title="15-2"></p>
+<p>发现报错：方法是<strong>默认私有</strong>的，现在我们需要用到pub关键字</p>
+<h5 id="b-pub关键字："><a href="#b-pub关键字：" class="headerlink" title="b. pub关键字："></a>b. pub关键字：</h5><p>将mod中的对应法修改为共有的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pub fn echo() &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是此时如果需要在子模块b中调用父级模块a的echo方法，是可以不用声明为pub的，只不过需要在子模块中声明<code>use super::echo;</code>表示继承父模块的方法</p>
+<p>如果mod中嵌套的层级较深，需要调用很底层的方法的话，除了需要将路径上的子模块和方法都设置为pub外，每次调用都写出全部路径似乎显得不够简洁，影响可读性，在这里可以用到use关键字</p>
+<h5 id="c-use关键字"><a href="#c-use关键字" class="headerlink" title="c. use关键字:"></a>c. use关键字:</h5><p><img src="/../assets/img/15-3.jpg" alt="图15-3" title="15-3"></p>
+<p>之后就可以在外层直接通过方法名调用了, 当不同路径的两个同名的方法都被use声明时，为了区分，需要将其中一个方法用as关键字声明为另外的别名</p>
+<h5 id="d-as关键字"><a href="#d-as关键字" class="headerlink" title="d. as关键字:"></a>d. as关键字:</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">use a::&#123;b::log, log as other_log&#125;;</span><br><span class="line">fn main() &#123;</span><br><span class="line">    //a::b::log();</span><br><span class="line"></span><br><span class="line">    log();</span><br><span class="line">    other_log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时as在rust中也可以用于基础类型的类型转换</p>
+<h5 id="从刚才的pub中可以扩展说一下Rust中的可见性控制"><a href="#从刚才的pub中可以扩展说一下Rust中的可见性控制" class="headerlink" title="从刚才的pub中可以扩展说一下Rust中的可见性控制"></a>从刚才的pub中可以扩展说一下Rust中的可见性控制</h5><p><strong>private(default)</strong> 默认情况下都是私有的</p>
+<p><strong>pub(crate)</strong> 仅限于在同一个crate内为公开，其余crate不能调用</p>
+<p><strong>pub(in path)</strong> 范围更加精细，控制只能在具体的模块中能访问</p>
+<p><strong>pub use</strong></p>
+<p>假设有以下结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 在 lib.rs 或 main.rs</span><br><span class="line">mod outer &#123;</span><br><span class="line">    pub mod inner &#123;</span><br><span class="line">        pub fn public_function() &#123;</span><br><span class="line">            println!(&quot;Called public_function()&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pub use outer::inner::public_function;</span><br></pre></td></tr></table></figure>
+
+<p>通过 pub use，我们将 publicfunction 重新导出到了 crate 的根作用域。现在，其他模块可以使用 use 语句直接访问 public_function，而不需要指定完整的模块路径：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">use crate::public_function;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    public_function(); // 直接调用，无需通过模块路径</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-Paths"><a href="#4-Paths" class="headerlink" title="4.Paths"></a>4.Paths</h4><p>一种命名项目的方式，例如struct、function或modules, 分为<strong>absolute path crate  绝对路径，relative path super self 相对路径</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">fn main() &#123;</span><br><span class="line">    crate::a::log();</span><br><span class="line">    a::b::log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>crate::a::log();</code>是绝对路径, <code>a::b::log();</code>是相对路径, 同时上文中还提到了用super关键字来调用父级mod的方法，self表示模块本身,用于调用同一个mod中的其他方法</p>
+<h4 id="5-workspace"><a href="#5-workspace" class="headerlink" title="5.workspace:"></a>5.workspace:</h4><p>Workspace是一个由多个crates组成的项目结构，主要用于</p>
+<p>代码共享：</p>
+<p>在 workspace 中，你可以有一个或多个crate（library crates）和二进制 crate（binary crates）。crate 可以被其他 crate 作为依赖项使用，从而实现代码的共享。</p>
+<p>以及统一依赖管理：</p>
+<p>workspace 允许你在一个中央位置管理所有 crate 的依赖，这有助于避免重复的依赖项和版本冲突。</p>
+<p>使用方法是：使用 cargo new 创建子目录，并在每个子目录中创建一个新的 Cargo.toml 文件，然后配置依赖关系：在根 Cargo.toml 文件中使用 [workspace] 部分配置依赖关系：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[workspace]</span><br><span class="line">menbers=[&quot;xx&quot;,&quot;xx&quot;,&quot;xx&quot;]</span><br></pre></td></tr></table></figure>
+
+<p>workspace中可以有一个主package，也可以没有</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/10/rust15/" data-id="cm222ty5b0000pguyhx2sh1hc" data-title="rust 学习笔记十五 Rust 的模块化" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/09/28/rust14/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记十四 Rust 的返回值与错误处理</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/28/rust14/">rust 学习笔记十四 Rust 的返回值与错误处理</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/24/rust13/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
+          </li>
+        
+          <li>
+            <a href="/2024/09/20/rust11/">rust 学习笔记十一 Rust 中的结构体</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

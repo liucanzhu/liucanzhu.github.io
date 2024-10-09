@@ -69,6 +69,93 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust15" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/10/rust15/" class="article-date">
+  <time class="dt-published" datetime="2024-10-09T16:17:15.815Z" itemprop="datePublished">2024-10-10</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）	概念"></a>（一）	概念</h3><h4 id="1-packages"><a href="#1-packages" class="headerlink" title="1. packages"></a>1. packages</h4><p>一项cargo特性，可让您<strong>构建、测试和共享crates</strong>, 一个packages可以包含多个binary crates和可选的lib crates。至少包含一个crate</p>
+<p>Packages的基础结构如图所示：</p>
+<p><img src="/../assets/img/15-1.jpg" alt="图15-1" title="15-1"></p>
+<p>其中bin目录下存放的就是多个binary crates，通过<code>cargo new</code>创建的项目就是一个标准的package结构，如果在创建时使用<code>cargo new –lib name</code>, 创建出的src目录下的主文件就是lib.rs(正常情况下是main.rs)像这样创建出的package就是只有单个crate，这两种crate分别叫<strong>binary crate和lib crate</strong>，区别在于binary crate是可以直接通过cargo run 执行的，而lib则不能</p>
+<h4 id="2-crates"><a href="#2-crates" class="headerlink" title="2. crates"></a>2. crates</h4><p>生成库或可执行文件的module tree, 刚才有提到，crates分为binary crate 和 library crate，一般情况下有一个lib crate,项目的bin目录下包含多个binary crate</p>
+<h4 id="3-modules-and-use"><a href="#3-modules-and-use" class="headerlink" title="3. modules and use"></a>3. modules and use</h4><p>控制路径的组织、范围和隐私</p>
+<p>在一个crate中可以包含多个module</p>
+<p>首先是module的声明</p>
+<h5 id="a-使用mod关键字："><a href="#a-使用mod关键字：" class="headerlink" title="a. 使用mod关键字："></a>a. 使用mod关键字：</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>模块中可以定义方法, 同时模块也支持嵌套：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    mod b &#123;</span><br><span class="line">        fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当需要在同crate中的main函数访问mod中的方法时, 需要通过双冒号调用：</p>
+<p><img src="/../assets/img/15-2.jpg" alt="图15-2" title="15-2"></p>
+<p>发现报错：方法是<strong>默认私有</strong>的，现在我们需要用到pub关键字</p>
+<h5 id="b-pub关键字："><a href="#b-pub关键字：" class="headerlink" title="b. pub关键字："></a>b. pub关键字：</h5><p>将mod中的对应法修改为共有的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pub fn echo() &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是此时如果需要在子模块b中调用父级模块a的echo方法，是可以不用声明为pub的，只不过需要在子模块中声明<code>use super::echo;</code>表示继承父模块的方法</p>
+<p>如果mod中嵌套的层级较深，需要调用很底层的方法的话，除了需要将路径上的子模块和方法都设置为pub外，每次调用都写出全部路径似乎显得不够简洁，影响可读性，在这里可以用到use关键字</p>
+<h5 id="c-use关键字"><a href="#c-use关键字" class="headerlink" title="c. use关键字:"></a>c. use关键字:</h5><p><img src="/../assets/img/15-3.jpg" alt="图15-3" title="15-3"></p>
+<p>之后就可以在外层直接通过方法名调用了, 当不同路径的两个同名的方法都被use声明时，为了区分，需要将其中一个方法用as关键字声明为另外的别名</p>
+<h5 id="d-as关键字"><a href="#d-as关键字" class="headerlink" title="d. as关键字:"></a>d. as关键字:</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">use a::&#123;b::log, log as other_log&#125;;</span><br><span class="line">fn main() &#123;</span><br><span class="line">    //a::b::log();</span><br><span class="line"></span><br><span class="line">    log();</span><br><span class="line">    other_log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同时as在rust中也可以用于基础类型的类型转换</p>
+<h5 id="从刚才的pub中可以扩展说一下Rust中的可见性控制"><a href="#从刚才的pub中可以扩展说一下Rust中的可见性控制" class="headerlink" title="从刚才的pub中可以扩展说一下Rust中的可见性控制"></a>从刚才的pub中可以扩展说一下Rust中的可见性控制</h5><p><strong>private(default)</strong> 默认情况下都是私有的</p>
+<p><strong>pub(crate)</strong> 仅限于在同一个crate内为公开，其余crate不能调用</p>
+<p><strong>pub(in path)</strong> 范围更加精细，控制只能在具体的模块中能访问</p>
+<p><strong>pub use</strong></p>
+<p>假设有以下结构：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 在 lib.rs 或 main.rs</span><br><span class="line">mod outer &#123;</span><br><span class="line">    pub mod inner &#123;</span><br><span class="line">        pub fn public_function() &#123;</span><br><span class="line">            println!(&quot;Called public_function()&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pub use outer::inner::public_function;</span><br></pre></td></tr></table></figure>
+
+<p>通过 pub use，我们将 publicfunction 重新导出到了 crate 的根作用域。现在，其他模块可以使用 use 语句直接访问 public_function，而不需要指定完整的模块路径：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">use crate::public_function;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    public_function(); // 直接调用，无需通过模块路径</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-Paths"><a href="#4-Paths" class="headerlink" title="4.Paths"></a>4.Paths</h4><p>一种命名项目的方式，例如struct、function或modules, 分为<strong>absolute path crate  绝对路径，relative path super self 相对路径</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">fn main() &#123;</span><br><span class="line">    crate::a::log();</span><br><span class="line">    a::b::log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>crate::a::log();</code>是绝对路径, <code>a::b::log();</code>是相对路径, 同时上文中还提到了用super关键字来调用父级mod的方法，self表示模块本身,用于调用同一个mod中的其他方法</p>
+<h4 id="5-workspace"><a href="#5-workspace" class="headerlink" title="5.workspace:"></a>5.workspace:</h4><p>Workspace是一个由多个crates组成的项目结构，主要用于</p>
+<p>代码共享：</p>
+<p>在 workspace 中，你可以有一个或多个crate（library crates）和二进制 crate（binary crates）。crate 可以被其他 crate 作为依赖项使用，从而实现代码的共享。</p>
+<p>以及统一依赖管理：</p>
+<p>workspace 允许你在一个中央位置管理所有 crate 的依赖，这有助于避免重复的依赖项和版本冲突。</p>
+<p>使用方法是：使用 cargo new 创建子目录，并在每个子目录中创建一个新的 Cargo.toml 文件，然后配置依赖关系：在根 Cargo.toml 文件中使用 [workspace] 部分配置依赖关系：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[workspace]</span><br><span class="line">menbers=[&quot;xx&quot;,&quot;xx&quot;,&quot;xx&quot;]</span><br></pre></td></tr></table></figure>
+
+<p>workspace中可以有一个主package，也可以没有</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/10/rust15/" data-id="cm222ty5b0000pguyhx2sh1hc" data-title="rust 学习笔记十五 Rust 的模块化" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust14" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/28/rust14/" class="article-date">
@@ -163,7 +250,7 @@
 
 <h4 id="4-panic-用于不可恢复错误"><a href="#4-panic-用于不可恢复错误" class="headerlink" title="4. panic!用于不可恢复错误"></a>4. panic!用于不可恢复错误</h4><p>a. 被动触发：</p>
 <p>C语言中,尝试读取数据结构之后的值是未定义行为(undefined behavior)。你会得到任何对应数据结构中这个元素的内存位置的值,甚至是这些内存并不属于这个数据结构的情况。这被称为缓冲区溢出(buffer overread),并可能会导致安全漏洞,比如攻击者<br>可以像这样操作索引来读取储存在数据结构之后不被允许的数据。为了保护程序远离这类漏洞,如果尝试读取一个索引不存在的元素,Rust会停止执行并拒绝继续。尝试运行上面的程序会出现如下</p>
-<p>14-4</p>
+<p><img src="/../assets/img/14-4.jpg" alt="图14-4" title="14-4"></p>
 <p>b. 主动调用：</p>
 <p>对此,Rust为我们提供了panic!宏,当调用执行该宏时,程序会打印印出一个错误信息,展开报错点往前的函数调用堆栈,最后退出程序。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    panic!(<span class="string">&quot;crash and burn&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -1014,71 +1101,6 @@
 
 
   
-    <article id="post-rust5" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/08/rust5/" class="article-date">
-  <time class="dt-published" datetime="2024-09-07T17:19:56.729Z" itemprop="datePublished">2024-09-08</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/08/rust5/">rust 学习笔记五 Rust中的数据类型</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>本篇主要讲解一下rust中的数据类型，主要从以下几个方面进行讲解：<strong>基础数据类型，整形，浮点，字符，序列，类型强制转换</strong></p>
-<h3 id="（一）rust类型概览"><a href="#（一）rust类型概览" class="headerlink" title="（一）rust类型概览"></a>（一）rust类型概览</h3><p>rust中的主要类型如下图所示：</p>
-<p><img src="/../assets/img/5-1.png" alt="图5-1" title="5-1"></p>
-<p><img src="/../assets/img/5-2.png" alt="图5-2" title="5-2"></p>
-<p><img src="/../assets/img/5-3.png" alt="图5-3" title="5-3"></p>
-<h3 id="（二）整型"><a href="#（二）整型" class="headerlink" title="（二）整型"></a>（二）整型</h3><p>根据数据的大小，我们可以将有符号和无符号整数类型进—步分类为不同的类别:其中固定的有8, 16, 32, 64, 128位，在前面加i或者u表示是否有符号，不固定的有isize 和 usize, <strong>在不同架构上不一样</strong>，<br>在rust中定义整形默认是32位，此外，在rust中如果数字或者字符太长时，可以用_进行分隔使其更易读，表达的意思是一样的，比如：</p>
-<p><img src="/../assets/img/5-4.jpg" alt="图5-4" title="5-4"></p>
-<h3 id="（三）浮点型"><a href="#（三）浮点型" class="headerlink" title="（三）浮点型"></a>（三）浮点型</h3><p>浮点类型数字是带有小数点的数字,在Rust中浮点类型也有两种基本类型:f32和f64,分别为32位和64位大小。默认浮点类型是f64,在现代的CPU中它的速度与f32几乎相同,但精度更高。<br>由于二进制和十进制之间的转换不是完全精确的，很多十进制小数在转换为二进制时会变成无限循环小数，这导致它们不能被精确地表示，比如在rust 中直接判断 0.1 + 0.2 是否等于0.3，<strong>二者并不会直接相等</strong>，当你执行 0.1 + 0.2 时，你实际上是在计算两个不精确的值的和，结果也是一个不精确的值。这个结果可能非常接近 0.3，但由于精度限制，它可能不完全等于 0.3.最准确的表达方式是<strong>在误差范围内二者相等</strong><br>如下所示：</p>
-<p><img src="/../assets/img/5-5.jpg" alt="图5-5" title="5-5"></p>
-<h3 id="（四）NAN"><a href="#（四）NAN" class="headerlink" title="（四）NAN"></a>（四）NAN</h3><p>对于数学上未定义的结果,如负数开平方根,Rust的浮点数类型会使用NaN(Not a Number)来处理这些情况。任何与NaN进行交互的操作都会返回NaN,并且NaN不能用于比较(如断言),这会导致程序崩溃。<br>在rust中，可以通过<code>is_nan</code>方法来判断一个元素是否有效</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> v = (-1.1_f64).sqrt();</span><br><span class="line"><span class="keyword">if</span> v.<span class="function"><span class="title">is_nan</span></span>() &#123;</span><br><span class="line">    <span class="built_in">print</span>!(<span class="string">&quot;v is nan&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（五）布尔类型"><a href="#（五）布尔类型" class="headerlink" title="（五）布尔类型"></a>（五）布尔类型</h3><p>Rust中的布尔类型有两个可能的值:true和false,布尔值占用内存的大小为1个字节</p>
-<h3 id="（六）序列"><a href="#（六）序列" class="headerlink" title="（六）序列"></a>（六）序列</h3><p>Rust提供了一个非常简洁的方式,用来生成连续的数值,例如1..5,生成从1到4的连续数字,不包含5;1.&#x3D;5,生成从1到5的连续数字,包含5,它的用途很简单,常常用于循环中<br>除了在之前文章中提到的用于数字的循环外，也可以用于字符的循环，比如：</p>
-<p><img src="/../assets/img/5-6.jpg" alt="图5-6" title="5-6"></p>
-<h3 id="七-类型强制转换"><a href="#七-类型强制转换" class="headerlink" title="(七)类型强制转换"></a>(七)类型强制转换</h3><p>在Rust中,<strong>as关键字</strong>用于在原始类型(如i64、f64、u64、char等)之间进行类型转换。然而,需要注意的是,as关健字并<strong>不适用于复合类型</strong>,比如String或其他用户定义的类型。对于复合类型的转换,通常需要使用其他方法或函数。<br>示例如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = 5;</span><br><span class="line"><span class="built_in">let</span> f = a as f32;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/08/rust5/" data-id="cm0sf9tq40004sguy12ez38ys" data-title="rust 学习笔记五 Rust中的数据类型" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1102,7 +1124,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
     </div>
   </div>
 
@@ -1113,6 +1135,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
+          </li>
         
           <li>
             <a href="/2024/09/28/rust14/">rust 学习笔记十四 Rust 的返回值与错误处理</a>
@@ -1128,10 +1154,6 @@
         
           <li>
             <a href="/2024/09/20/rust11/">rust 学习笔记十一 Rust 中的结构体</a>
-          </li>
-        
-          <li>
-            <a href="/2024/09/15/rust10/">rust 学习笔记十 Rust 中的ENUM</a>
           </li>
         
       </ul>
