@@ -69,6 +69,108 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust16" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/12/rust16/" class="article-date">
+  <time class="dt-published" datetime="2024-10-11T16:37:11.423Z" itemprop="datePublished">2024-10-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/10/12/rust16/">rust 学习笔记十六 Rust 智能指针</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）	概念"></a>（一）	概念</h3><p>智能指针(Smart Pointers)是一类数据结构,它不仅包含一个指针,还附带一些额外的元数据和功能。与普通指针不同,智能指针在Rust中实现了<strong>Deref和Drop两个trait</strong>,这使得它们可以像指针一样解引用并在离开作用域时自动清理资源</p>
+<h3 id="（二）作用"><a href="#（二）作用" class="headerlink" title="（二）	作用"></a>（二）	作用</h3><h4 id="1-资源管理"><a href="#1-资源管理" class="headerlink" title="1 资源管理"></a>1 资源管理</h4><p>自动管理资源的分配和释放,避免内存泄漏</p>
+<h4 id="2-所有权与借用"><a href="#2-所有权与借用" class="headerlink" title="2 所有权与借用"></a>2 所有权与借用</h4><p>Rust的所有权系统通过智能指针来确保内存安全,避免数据竞争和悬垂指针</p>
+<h4 id="3-复杂数据结构"><a href="#3-复杂数据结构" class="headerlink" title="3 复杂数据结构"></a>3 复杂数据结构</h4><p>通过智能指针可以构建复杂的数据结构,如递归结构、共享数据等</p>
+<h3 id="（三）特性"><a href="#（三）特性" class="headerlink" title="（三）	特性"></a>（三）	特性</h3><h4 id="1-Deref-Trait"><a href="#1-Deref-Trait" class="headerlink" title="1 Deref Trait"></a>1 Deref Trait</h4><p>实现了Dereftrait的类型可以像常规引用一样使用*运算符解引用</p>
+<p>例如:Box<T>实现了Deref,所以可以通过*解引用获取其内部数据</p>
+<h4 id="2-Drop-Trait"><a href="#2-Drop-Trait" class="headerlink" title="2 Drop Trait"></a>2 Drop Trait</h4><p>实现了Droptrait的类型在离开作用域时会自动调用其drop方法,用于释放资源</p>
+<p>例如:Box<T>在超出作用域时会自动释放堆内存</p>
+<h3 id="（四）Box"><a href="#（四）Box" class="headerlink" title="（四）	Box"></a>（四）	Box<T></h3><h4 id="1-概念："><a href="#1-概念：" class="headerlink" title="1. 概念："></a>1. 概念：</h4><p>Box<T>将类型T的值分配在堆上,而不是栈上（堆容量大得多，大型数据放在栈上会存在栈溢出）。当Box被销毁时,堆上的数据也会被销毁。</p>
+<h4 id="2-底层实现"><a href="#2-底层实现" class="headerlink" title="2.	底层实现"></a>2.	底层实现</h4><h5 id="a-Box的底层原理"><a href="#a-Box的底层原理" class="headerlink" title="a. Box的底层原理"></a>a. Box的底层原理</h5><p>Box<T>指针实际上是一个智能指针,内部包含一个指向堆上分配内存的裸指针, 当Box<T>被销毁时,其Drop trait会被调用,释放堆上的内存。</p>
+<h5 id="b-内存分配"><a href="#b-内存分配" class="headerlink" title="b. 内存分配"></a>b. 内存分配</h5><p>Rust使用系统的全局分配器(如malloc和free)来管理堆内存, Box::new分配内存,Drop释放内存。</p>
+<h5 id="c-安全性"><a href="#c-安全性" class="headerlink" title="c. 安全性"></a>c. 安全性</h5><p>Rust的所有权系统确保Box<T>的内存安全。所有权转移多时,堆内存的生命周期也会随之变化。</p>
+<h4 id="3-Box的应用场景"><a href="#3-Box的应用场景" class="headerlink" title="3.	 Box的应用场景"></a>3.	 Box的应用场景</h4><h6 id="a-堆分配"><a href="#a-堆分配" class="headerlink" title="a.堆分配"></a>a.堆分配</h6><p>Box最常见的用途是将数据分配在堆上,而不是栈上。这在处理较大数据结构或数据结构的大小在编译时不确定时尤为重要。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    let b=Box::new(5);</span><br><span class="line">    println!(&quot;b=&#123;&#125;&quot;,b);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="b-动态大小类型-DST"><a href="#b-动态大小类型-DST" class="headerlink" title="b. 动态大小类型(DST)"></a>b. 动态大小类型(DST)</h5><p>Box允许处理动态大小类型,如str和[T]</p>
+<p><img src="/../assets/img/16-1.jpg" alt="图16-1" title="16-1"></p>
+<h5 id="c-递归数据结构"><a href="#c-递归数据结构" class="headerlink" title="c. 递归数据结构"></a>c. 递归数据结构</h5><p>递归数据结构需要指针类型来引用自身,而Box提供了这一功能。</p>
+<p><img src="/../assets/img/16-2.jpg" alt="图16-2" title="16-2"></p>
+<h5 id="d-类型擦除"><a href="#d-类型擦除" class="headerlink" title="d. 类型擦除"></a>d. 类型擦除</h5><p>Box<dyn Trait>用于类型擦除,允许<strong>在运行时决定类型</strong></p>
+<p><img src="/../assets/img/16-3.jpg" alt="图16-3" title="16-3"></p>
+<p>如图所示，动态数组中包含了Dog和Cat两种结构的智能指针，他们都实现了trait中的方法，只需要将vec声明为<dyn trait>即可（dyn 关键字用于表示动态分发的 trait）</p>
+<h5 id="e-内存管理和性能优化"><a href="#e-内存管理和性能优化" class="headerlink" title="e. 内存管理和性能优化"></a>e. 内存管理和性能优化</h5><p>通过使用Box,可以控制内存的分配和释放,从而优化性能能和内存使用。例如,将大型数据结构放在堆上,而不是栈上,可以减少栈的使用量,从而避免栈溢出。</p>
+<p>声明到堆上：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">let start = Instant::now(); </span><br><span class="line"></span><br><span class="line">let large_array = Box::new([0u8; 1_000_000]);</span><br><span class="line"></span><br><span class="line">let duration = start.elapsed();</span><br></pre></td></tr></table></figure>
+<p>打印duration得到：363.2µs,</p>
+<p>而直接声明到栈上：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">let large_array = [0u8; 1_000_000]);</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">let start = Instant::now(); </span><br><span class="line"></span><br><span class="line">let large_array = [0u8; 1_000_000];</span><br><span class="line"></span><br><span class="line">let duration = start.elapsed();</span><br></pre></td></tr></table></figure>
+<p>打印duration得到：30µs</p>
+<p>由此可见，创建一个堆上的 Box 数组（large_array）比直接在栈上创建数组（large_array2）要花费更多的时间，这是因为 Box::new 涉及到堆内存分配</p>
+<h4 id="4-Box的优缺点"><a href="#4-Box的优缺点" class="headerlink" title="4.	Box的优缺点"></a>4.	Box的优缺点</h4><h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><p>提供堆内存分配,支持复杂数据结构，与Rust的所有权系统完美集成,确保<strong>内存安全</strong>。动态分配对象,实现类型擦除。</p>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><p>需要<strong>堆内存分配和释放,可能带来性能开销</strong>。不适合需要频繁分配和释放的场景。</p>
+<h3 id="（五）Drop、Deref和DerefMut"><a href="#（五）Drop、Deref和DerefMut" class="headerlink" title="（五）Drop、Deref和DerefMut"></a>（五）Drop、Deref和DerefMut</h3><h4 id="1-Drop-Trait"><a href="#1-Drop-Trait" class="headerlink" title="1. Drop Trait"></a>1. Drop Trait</h4><p>Dropt rait定义了当一个值离开作用域时应该执行的操作。</p>
+<p>例如:Box<T>在超出作用域时会自动调用其Drop trait,释放堆上的内存。</p>
+<p>Drop trait用于自定义当值离开作用域时执行的代码,通常用于释放资源(例如内存、文件句柄、网络连接等)。</p>
+<p><img src="/../assets/img/16-4.jpg" alt="图16-4" title="16-4"></p>
+<p>如图所示，在两个变量依次离开当前作用域时，drop函数均被自动触发</p>
+<h4 id="2-Deref-Trait"><a href="#2-Deref-Trait" class="headerlink" title="2. Deref Trait"></a>2. Deref Trait</h4><p>Deref trait定义了如何将一个类型转换为引用。</p>
+<p>例如:Box<T>实现了Deref,所以可以通过*运算符解引用获取其内部数据。</p>
+<p>Deref trait定义了一个deref方法,该方法返回指向目标类型的引用。</p>
+<p><img src="/../assets/img/16-5.jpg" alt="图16-5" title="16-5"></p>
+<h4 id="3-DerefMut-Trait"><a href="#3-DerefMut-Trait" class="headerlink" title="3. DerefMut Trait"></a>3. DerefMut Trait</h4><p>与Deref类似,Deref Mut用于重载可变解引用运算符(*),允许对自定义类型进行可变解引用。</p>
+<p>将变量声明为mut后，为其实现Deref</p>
+<p>特性中的deref方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">impl&lt;T&gt; Deref for MyBox&lt;T&gt; &#123;</span><br><span class="line">    type Target = T;</span><br><span class="line">    fn deref(&amp;self)-&gt;&amp;T &#123;</span><br><span class="line">        println!(&quot;deref called&quot;);</span><br><span class="line">        &amp;self.0</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>即可通过*获取并修改变量</p>
+<h3 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h3><p>实现一个简单的文件系统模拟,其中包含文件和文件夹的根念。支持创建和罗列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">trait FileSystem&#123;</span><br><span class="line">    fn create_file(&amp;mut self,name: &amp;str)-&gt;&amp;mut Node;</span><br><span class="line">    fn create_folder(&amp;mut self, name: &amp;str)-&gt;&amp;mut Node;</span><br><span class="line">    fn list_contents(&amp;self, num:usize);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#[derive(Debug,Clone)]</span><br><span class="line">enum Node &#123;</span><br><span class="line">    File(String),</span><br><span class="line">    Folder(String, Vec&lt;Box&lt;Node&gt;&gt;),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct FolderNode &#123;</span><br><span class="line">    name:String,</span><br><span class="line">    contents: Vec&lt;Box&lt;Node&gt;&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl FileSystem for FolderNode &#123;</span><br><span class="line">    fn create_file(&amp;mut self, name: &amp;str) -&gt; &amp;mut Node &#123;</span><br><span class="line">        let file = Box::new(Node::File(name.to_string()));</span><br><span class="line">        self.contents.push(file);</span><br><span class="line">        self.contents.last_mut().unwrap()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn create_folder(&amp;mut self, name: &amp;str) -&gt; &amp;mut Node&#123;</span><br><span class="line">        let fileFolder = Box::new(Node::Folder(name.to_string(), vec![]));</span><br><span class="line">        self.contents.push(fileFolder);</span><br><span class="line">        self.contents.last_mut().unwrap()</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn list_contents(&amp;self, num:usize) &#123;</span><br><span class="line">        println!(&quot;&#123;&#125;:&#123;&#125;&quot;,&quot;*&quot;.repeat(num), self.name);</span><br><span class="line">        for content in &amp;self.contents &#123;</span><br><span class="line">            match content.as_ref() &#123;</span><br><span class="line">                Node::File(name) =&gt; println!(&quot;&#123;&#125;:&#123;&#125;&quot;,&quot;*&quot;.repeat(num+1), name),</span><br><span class="line">                Node::Folder(name, vec) =&gt; &#123;</span><br><span class="line">                let mut sub_folder = FolderNode &#123;</span><br><span class="line">                    name: name.clone(),</span><br><span class="line">                    contents: vec.clone(),</span><br><span class="line">                &#125;;</span><br><span class="line">                sub_folder.list_contents(num+1);&#125;,</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut root = FolderNode &#123;</span><br><span class="line">        name: &quot;root&quot;.to_string(),</span><br><span class="line">        contents: Vec::new(),</span><br><span class="line">    &#125;;</span><br><span class="line">    root.create_folder(&quot;folder1&quot;);</span><br><span class="line">    let file1 = root.create_file(&quot;file1.txt&quot;);</span><br><span class="line">    root.create_folder(&quot;folder2&quot;);</span><br><span class="line">    let file2 = root.create_file(&quot;file2.txt&quot;);</span><br><span class="line">        // 在 folder1 中创建文件</span><br><span class="line">        &#123;</span><br><span class="line">            let folder1 = &amp;mut root.contents[0];</span><br><span class="line">            if let Node::Folder(_, ref mut contents)= **folder1 &#123;</span><br><span class="line">            </span><br><span class="line">                let mut sub_folder = FolderNode &#123;</span><br><span class="line">                    name: &quot;sub_folder&quot;.to_string(),</span><br><span class="line">                    contents: Vec::new(),</span><br><span class="line">                &#125;;</span><br><span class="line">                sub_folder.create_file(&quot;file_in_folder1.txt&quot;); </span><br><span class="line">                *contents = sub_folder.contents;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                panic!(&quot;Expected a folder&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br><span class="line">        // 列出文件夹的内容</span><br><span class="line">    root.list_contents(0);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/12/rust16/" data-id="cm26g9orz000058uyhmah69ik" data-title="rust 学习笔记十六 Rust 智能指针" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust15" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/10/10/rust15/" class="article-date">
@@ -1032,75 +1134,6 @@
 
 
   
-    <article id="post-rust6" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/08/rust6/" class="article-date">
-  <time class="dt-published" datetime="2024-09-08T10:20:29.774Z" itemprop="datePublished">2024-09-08</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/08/rust6/">rust 学习笔记六 Rust中的所有权</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Rust是一种系统编程语言,其设计目的是确保内存安全并限防止数据竞争,而不依赖垃圾回收器。这种内存安全性主要通过<strong>所有权系统</strong>来实现</p>
-<p>先看看主流编程语言的内存回收机制对比 :</p>
-<p><img src="/../assets/img/6-1.png" alt="图6-1" title="6-1"></p>
-<p>而在rust中，内存管理是通过<strong>所有权系统</strong>完成的</p>
-<h3 id="一-有以下特点："><a href="#一-有以下特点：" class="headerlink" title="(一)有以下特点："></a>(一)有以下特点：</h3><p>1.Rust使用所有权系统进行内存管理,编译器在编译时通过静态态分析来确保内存安全</p>
-<p>2.每个值<strong>都有一个所有者,在任何时候只能有一个有效的所有者</strong></p>
-<p>3.通过 <strong>借用(引用)</strong> 机制来共享数据,同时保证数据竞争和悬垂指针的安全</p>
-<p>4.当所有者离开作用域(scope),值会被丢弃(drop)</p>
-<h3 id="二-为什么要有所有权："><a href="#二-为什么要有所有权：" class="headerlink" title="(二)为什么要有所有权："></a>(二)为什么要有所有权：</h3><p>举例说明：</p>
-<p>对于分布在栈上的数据，如</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> x = 5;</span><br><span class="line"><span class="built_in">let</span> y = x;</span><br></pre></td></tr></table></figure>
-
-<p>这种情况下，是将原来的值进行了一个拷贝，而没有改变原来数据的所有权</p>
-<p>而对于分布在堆上的数据，如：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> s1 = String::from(<span class="string">&quot;value&quot;</span>);</span><br><span class="line"><span class="built_in">let</span> s2 = s1;</span><br></pre></td></tr></table></figure>
-
-<p>实则是改变了数据的所有权到s2上，此时直接使用s1，会报错</p>
-<p>故所有权可以<strong>确保程序在运行时不会访问无效的内存，避免了数据竞争和内存泄漏</strong></p>
-<p>对于以下情况：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="built_in">let</span> s1 = String::from(<span class="string">&quot;value&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> s2 = s1;</span><br><span class="line">&#125;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s2);</span><br></pre></td></tr></table></figure>
-
-<p>也是不能正常访问的，因为在编译过程中，在scope结束时，会自动添加类似drop(s2)的代码，作用域一结束，s2就失效了</p>
-<h3 id="三-实践一下"><a href="#三-实践一下" class="headerlink" title="(三)实践一下"></a>(三)实践一下</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> s2 = take_ownership(s1) ;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s1);</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s2);</span><br><span class="line">&#125;</span><br><span class="line">fn take_ownership(s:String) -&gt; String&#123;</span><br><span class="line">    s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>直接执行这段代码会报错。因为<code>ake_ownership</code> 函数获取了 s1 的所有权，因此 s1 不再有效，</p>
-<p>如果需要保持s1所有权不变的前提下，将其值传入函数可以将s1进行<strong>克隆</strong>，如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> s2 = take_ownership(s1.clone()) ;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s1);</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s2);</span><br><span class="line">&#125;</span><br><span class="line">fn take_ownership(s:String) -&gt; String&#123;</span><br><span class="line">    s</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>或者传入s1的<strong>不可变引用</strong>到函数中，如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> s2 = take_ownership(&amp;s1) ;</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s1);</span><br><span class="line">    println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s2);</span><br><span class="line">&#125;</span><br><span class="line">fn take_ownership(s:&amp;String) -&gt; String&#123;</span><br><span class="line">    <span class="built_in">return</span>  s.to_string();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在上述两种方法中，更推荐使用第二种方法，因为第一种方法在参数体积比较大的时候，对参数进行clone，可能会导致对内存的占用和对性能的消耗</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/08/rust6/" data-id="cm0tfotgz00007cuyaj06gdu9" data-title="rust 学习笔记六 Rust中的所有权" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1137,6 +1170,10 @@
       <ul>
         
           <li>
+            <a href="/2024/10/12/rust16/">rust 学习笔记十六 Rust 智能指针</a>
+          </li>
+        
+          <li>
             <a href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
           </li>
         
@@ -1150,10 +1187,6 @@
         
           <li>
             <a href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
-          </li>
-        
-          <li>
-            <a href="/2024/09/20/rust11/">rust 学习笔记十一 Rust 中的结构体</a>
           </li>
         
       </ul>
