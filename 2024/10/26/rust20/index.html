@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记十九 Rust中的宏 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Rust中的宏主要分为两种： （一）声明式宏声明宏(Declarative Macros),也称为”macro_rules!”,是最常见的宏类型。它们允许你通过模式匹配来生成代码。 1234567891011121314fn main()&#123;    say_hello!();    say_hello! &#123;&#125;;    let var_name &#x3D; say_hello![">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记十九 Rust中的宏">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/10/26/rust20/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="Rust中的宏主要分为两种： （一）声明式宏声明宏(Declarative Macros),也称为”macro_rules!”,是最常见的宏类型。它们允许你通过模式匹配来生成代码。 1234567891011121314fn main()&#123;    say_hello!();    say_hello! &#123;&#125;;    let var_name &#x3D; say_hello![">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-10-25T16:02:23.857Z">
+<meta property="article:modified_time" content="2024-10-25T16:09:09.886Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust20" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/26/rust20/" class="article-date">
+  <time class="dt-published" datetime="2024-10-25T16:02:23.857Z" itemprop="datePublished">2024-10-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记十九 Rust中的宏
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Rust中的宏主要分为两种：</p>
+<h3 id="（一）声明式宏"><a href="#（一）声明式宏" class="headerlink" title="（一）声明式宏"></a>（一）声明式宏</h3><p>声明宏(Declarative Macros),也称为”macro_rules!”,是最常见的宏类型。它们允许你通过模式匹配来生成代码。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    say_hello!();</span><br><span class="line">    say_hello! &#123;&#125;;</span><br><span class="line">    let var_name = say_hello![];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//定义一个简单的宏来打印消息</span><br><span class="line"></span><br><span class="line">#[macro_export]</span><br><span class="line">macro_rules! say_hello &#123;</span><br><span class="line">    () =&gt; &#123;</span><br><span class="line">        println!(&quot;Hello, world!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和函数相比，声明宏在调用时候需要加！，且可以传入变参,并且从上面的代码可以发现，调用时可以用[], {}, ()三种方式</p>
+<p>Rust中常见的声明式宏主要有：println format等</p>
+<h3 id="（二）过程宏"><a href="#（二）过程宏" class="headerlink" title="（二）过程宏"></a>（二）过程宏</h3><p>过程宏(Procedural Macros)允许你使用函数生成代码。它们分为三种类型:</p>
+<h4 id="1-派生宏"><a href="#1-派生宏" class="headerlink" title="1.派生宏"></a>1.派生宏</h4><p>常用的derive 主要用在struct和enum中</p>
+<p>创建：</p>
+<p>创建一个新项目，在toml中声明：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[lib]</span><br><span class="line">proc-macro = true</span><br></pre></td></tr></table></figure>
+
+<p>表示这是一个扩展宏, 然后再依赖中添加 quote 和 syn 用于将我们的代码与AST树之间相互转换</p>
+<p>举例:</p>
+<p>创建：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">use proc_macro:: TokenStream;</span><br><span class="line">use quote::quote;</span><br><span class="line">#[proc_macro_derive(HelloMacro)]</span><br><span class="line">pub fn hello_macro_derive(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    let ast=syn::parse(input).unwrap();</span><br><span class="line">    let name = &amp;ast.ident;</span><br><span class="line">    let gen = quote!&#123;</span><br><span class="line">        impl HelloMacro for #name &#123;</span><br><span class="line">            fn hello_macro()&#123;</span><br><span class="line">                println!(&quot;Hello, Macro! My name is &#123;&#125;!&quot;, stringify!(#name));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    gen.into()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用：导入之后通过derive衍生</p>
+<h4 id="2-属性宏-Attribute-like-macro"><a href="#2-属性宏-Attribute-like-macro" class="headerlink" title="2.属性宏(Attribute-like macro)"></a>2.属性宏(Attribute-like macro)</h4><p>比如：在测试前面声明的#[test]，指定一个条件编译的配置选项:<code>#![cfg(target_arch)]</code>， 用于抑制编译器对未使用代码的警告:#![allow(dead_code)]<br>声明：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#[route(GET, &quot;/&quot;)]</span><br><span class="line">fn index()</span><br><span class="line">#[proc_macro_attribute]</span><br><span class="line">pub fn route(attr:TokenStream,item:TokenStream) -&gt; TokenStream &#123;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-函数宏-Function-like-macro"><a href="#3-函数宏-Function-like-macro" class="headerlink" title="3.函数宏(Function-like macro)"></a>3.函数宏(Function-like macro)</h4><p>比如 dbg!：	assert! 和 assert_eq!等</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#[proc_macro]</span><br><span class="line">pub fn sql(input: TokenStream) -&gt;TokenStream&#123;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>创建声明宏:使用 macro_rules!定义宏,通过模式匹配生成代码。<br>创建过程宏:使用过程宏函数<code>(#[proc_macro])</code>、派生宏<code>(#[proc_macro_derive])</code>和属性宏<code>(#[proc_macro_attribute])</code>生成代码。</p>
+<p>宏的应用场景<br>1.减少重复代码:通过宏生成重复的代码。<br>2.编译期计算:在<strong>编译期</strong>进行计算并生成代码,提高运行时性能。<br>3.DSL(领域特定语言):使用宏定义领域特定语言,提高代码的表达力和可读性。</p>
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>使用通过<code>macro_rules!</code>实现对应的macro</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">//定义宏</span><br><span class="line">macro_rules! repeat &#123;</span><br><span class="line">    ($string:expr, $n:expr) =&gt; &#123;&#123;</span><br><span class="line">        let mut result = String::new();</span><br><span class="line">        for _ in 0..$n &#123;</span><br><span class="line">            result.push_str($string);</span><br><span class="line">        &#125;</span><br><span class="line">        result</span><br><span class="line">    &#125;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">macro_rules! sum &#123;</span><br><span class="line">    ($($val:expr),+) =&gt; &#123;&#123;</span><br><span class="line">        let mut total = 0;</span><br><span class="line">        $(</span><br><span class="line">            total += $val;</span><br><span class="line">        )+</span><br><span class="line">        total</span><br><span class="line">    &#125;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">macro_rules! max_value &#123;</span><br><span class="line"></span><br><span class="line">    ($x:expr) =&gt; &#123; $x &#125;;</span><br><span class="line"></span><br><span class="line">    ($x:expr, $($rest:expr),+) =&gt; &#123;</span><br><span class="line">        if $x &gt; max_value!($($rest),+) &#123;</span><br><span class="line">            $x</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            max_value!($($rest),+)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    // 使用宏</span><br><span class="line">    assert_eq!(repeat!(&quot;x&quot;, 3), &quot;xxx&quot;);</span><br><span class="line">    assert_eq!(sum!(1, 2, 3, 4, 5), 15);</span><br><span class="line">    assert_eq!(max_value!(1, 8, 9), 9);</span><br><span class="line">    </span><br><span class="line">    println!(&quot;All tests passed!&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/26/rust20/" data-id="cm2oxbt5z00003guyeo4qappl" data-title="rust 学习笔记十九 Rust中的宏" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/10/22/rust19/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记十九 Rust中的trait</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/10/26/rust20/">rust 学习笔记十九 Rust中的宏</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/22/rust19/">rust 学习笔记十九 Rust中的trait</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/15/rust18/">rust 学习笔记十八 Rust中的生命周期</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/13/rust17/">rust 学习笔记十七 Rust 泛型</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/12/rust16/">rust 学习笔记十六 Rust 智能指针</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

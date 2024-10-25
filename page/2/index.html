@@ -69,6 +69,137 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust10" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/15/rust10/" class="article-date">
+  <time class="dt-published" datetime="2024-09-15T14:24:06.288Z" itemprop="datePublished">2024-09-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/15/rust10/">rust 学习笔记十 Rust 中的ENUM</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）概览"><a href="#（一）概览" class="headerlink" title="（一）概览"></a>（一）概览</h3><p>rust中创建字符串主要有以下两种方式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    enum Pets&#123;</span><br><span class="line">        Bird,</span><br><span class="line">        Cat(String),</span><br><span class="line">        Dog&#123; name:String, age:usize&#125;,</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">let</span> bird= Pets::Bird;</span><br><span class="line">    <span class="built_in">let</span> <span class="built_in">cat</span> = Pets::Cat(<span class="string">&quot;jack&quot;</span>.to_string());</span><br><span class="line">    <span class="built_in">let</span> dog = Pets::Dog &#123; name: <span class="string">&quot;tom&quot;</span>.to_string(), age: 18 &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Enum中的元素可以没有任何参数，可以是带有一个参数的变体，也可以是有多个name声明的结构体</p>
+<p>如果直接对初始化出来的元素进行打印：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">println!(<span class="string">&quot;&#123;&#125;,&#123;&#125;,&#123;&#125;&quot;</span>,bird, <span class="built_in">cat</span>, dog);</span><br></pre></td></tr></table></figure>
+
+<p>会发现报错：没有实现debug trait，此时我们可以通过在代码上方直接添加：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#[derive(Debug)]</span></span><br></pre></td></tr></table></figure>
+
+<p>这样相当于在枚举中自动补全了debug trait.</p>
+<p>可以为枚举实现一些方法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">impl Pets &#123;</span><br><span class="line">    fn speak(&amp;self) &#123;</span><br><span class="line">        println!(<span class="string">&quot;speak&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的speak就叫做<strong>methods（方法）</strong>,其中第一个参数&amp;self是<strong>对当前这个枚举实例的引用</strong>, 然后枚举中的元素的实例可以调用这个方法：<code>dog.speak();</code></p>
+<p>此外还有一种关联函数，示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">impl Pets &#123;</span><br><span class="line">    fn <span class="function"><span class="title">log</span></span>() &#123;</span><br><span class="line">        println!(<span class="string">&quot;aaa&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这类函数参数中将不会再有枚举实例的引用，调用方法也和methods有区别，不再是通过枚举中元素的，而是直接通过<strong>枚举名称::静态方法</strong>名来调用：<code> Pets::log();</code></p>
+<h3 id="二-用法"><a href="#二-用法" class="headerlink" title="(二) 用法"></a>(二) 用法</h3><p>1，比较</p>
+<p>先看下面这个例子：</p>
+<p><img src="/../assets/img/10-1.jpg" alt="图10-1" title="10-1"></p>
+<p>bird 和 cat 是同一个枚举 Pets 的不同变体的实例，如果直接将这两个实例进行对比，会报错：<code>binary operation `==` cannot be applied to type `Pets</code>,在rust中，是不支持直接用等号来比较两个变体实例的，根据提示，<br><code>an implementation of `PartialEq` might be missing for `Pets`,consider annotating `Pets` with `#[derive(PartialEq)]`: </code>, 和刚才一样，在最前面添加一个<code>#[derive(PartialEq)]</code>进行补全，即可使用等号比较.</p>
+<ol start="2">
+<li>Match vs if let</li>
+</ol>
+<p>对于创建出来的变体实例，可以通过match判断其类型</p>
+<p>示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">match <span class="built_in">cat</span> &#123;</span><br><span class="line">    Pets::Cat(e) =&gt; &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    Pets::Dog&#123;name, age&#125; =&gt; &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    Pets::Bird =&gt; todo!(),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在匹配到对应类型时，可以直接访问其中的变量</p>
+<p>同时match也适用于rust中的普通变量，比如可以用来匹配i32常数:</p>
+<p><img src="/../assets/img/10-2.jpg" alt="图10-2" title="10-2"></p>
+<p>但此时发现有报错：因为match要求列举完可能的所有情况，但我们无法将i32的所有可能值全部列举，所以可以在下面再加一种可能：</p>
+<p>用<strong>下划线</strong>代替其余的所有可能</p>
+<p><img src="/../assets/img/10-3.jpg" alt="图10-3" title="10-3"></p>
+<p>而如果觉得每次都进行模糊匹配有点复杂，可以选择使用if let，便可以只关注需要匹配的类型：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> <span class="built_in">let</span> <span class="built_in">cat</span> = Pets::Cat &#123;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是if let无法像match一样获取到匹配的参数.</p>
+<h3 id="三-rust中的两大枚举"><a href="#三-rust中的两大枚举" class="headerlink" title="(三) rust中的两大枚举"></a>(三) rust中的两大枚举</h3><ol>
+<li>Option</li>
+</ol>
+<p>示例如下：</p>
+<p><img src="/../assets/img/10-4.jpg" alt="图10-4" title="10-4"></p>
+<p>被分为<strong>some和none</strong>两种情况</p>
+<p>如果存在一个map,如下:</p>
+<p><img src="/../assets/img/10-5.jpg" alt="图10-5" title="10-5"></p>
+<p>通过get获取其中的某个key,此时获得的是一个<strong>option</strong>类型的元素,我们将其进行match匹配:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">match a &#123;</span><br><span class="line">    Some(val)=&gt;&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    None =&gt;&#123; </span><br><span class="line">        </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样，对于一个动态数组，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> arr = vec![1,2,3,4];</span><br><span class="line"><span class="built_in">let</span> a = arr.iter().last();</span><br></pre></td></tr></table></figure>
+
+<p>我们取出它的最后一个元素，根据提示，也是option类型，故也可以用match进行匹配</p>
+<ol start="2">
+<li>Result</li>
+</ol>
+<p>先看示例如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> num:Result&lt;usize, ()&gt; = Ok(1);</span><br><span class="line">match num &#123;</span><br><span class="line">    Ok(val)=&gt;&#123;&#125;,</span><br><span class="line">    Err(_)=&gt;&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果同样使用match进行匹配，只不过其中的匹配项变成了<strong>Ok()和 Err()</strong></p>
+<p>在Rust当中，可以声明函数的返回值为Result类型,比如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">fn main() -&gt; Result&lt;(), ()&gt;&#123;</span><br><span class="line">    <span class="built_in">let</span> num: Result&lt;usize, ()&gt; = Ok(1);</span><br><span class="line">    match num &#123;</span><br><span class="line">        Ok(val)=&gt;&#123;&#125;</span><br><span class="line">        Err(_)=&gt;&#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    Ok(())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而将&amp;str类型进行反序列化的parse函数返回值也是Result类型</p>
+<ol start="3">
+<li>Option  和  Result 的相互转换</li>
+</ol>
+<p>a.Option转result:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> opt = Some(42);</span><br><span class="line"><span class="built_in">let</span> result:Result&lt;i32, &amp;str&gt; = opt.ok_or(<span class="string">&quot;err&quot;</span>);</span><br><span class="line">assert_eq!(result, Ok(42));</span><br><span class="line"></span><br><span class="line"><span class="built_in">let</span> none:Option&lt;i32&gt; = None;</span><br><span class="line"><span class="built_in">let</span> result:Result&lt;i32, &amp;str&gt; = none.ok_or(<span class="string">&quot;err&quot;</span>);</span><br><span class="line">assert_eq!(result, Err(<span class="string">&quot;err&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>其中第一个result走的是ok，所以得到的是Ok(42),第二个和or相匹配，得到的是Err(“err”)</p>
+<p>b.Result转option</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> res:Result&lt;i32, &amp;str&gt; = Ok(1);</span><br><span class="line"><span class="built_in">let</span> option = res.ok();</span><br><span class="line"></span><br><span class="line"><span class="built_in">let</span> res:Result&lt;i32, &amp;str&gt; = Err(<span class="string">&quot;err&quot;</span>);</span><br><span class="line"><span class="built_in">let</span> option = res.ok();</span><br></pre></td></tr></table></figure>
+
+<p>如果是第二种情况，会转换成None,正常情况则是Some</p>
+<p>4.常见api</p>
+<p>a.可以通过map来遍历option:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> option = Some(1);</span><br><span class="line"><span class="built_in">let</span> b = option.map(|num| num + 1);</span><br></pre></td></tr></table></figure>
+
+<p>b.如果需要多层match层层嵌套，会导致代码繁琐，易读性不高，所以有语法糖，可以直接取出值：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> option = Some(1);</span><br><span class="line"><span class="built_in">let</span> a= option.unwrap();</span><br></pre></td></tr></table></figure>
+
+<p>但如果值是None,会panic，也可以使用expect:<code>let a = option.expect(“msg”);</code>可以传入默认值</p>
+<p>c.or_else</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> option = Some(1);</span><br><span class="line"><span class="built_in">let</span> a = option.or_else(|| Some((<span class="number">3</span>)));</span><br></pre></td></tr></table></figure>
+
+<p>返回值也是一个Some，用于优雅的处理可能为None的值，给一个默认值</p>
+<p>d.mem::size_of::<T>() </p>
+<p>mem::size_of::<T>() 函数返回类型 T 在当前平台上的内存大小（以字节为单位）</p>
+<p>示例如下：</p>
+<p><img src="/../assets/img/10-6.jpg" alt="图10-6" title="10-6"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/15/rust10/" data-id="cm13ta5d30000xsuy91ri6psf" data-title="rust 学习笔记十 Rust 中的ENUM" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust9" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/13/rust9/" class="article-date">
@@ -801,6 +932,10 @@
       <ul>
         
           <li>
+            <a href="/2024/10/26/rust20/">rust 学习笔记十九 Rust中的宏</a>
+          </li>
+        
+          <li>
             <a href="/2024/10/22/rust19/">rust 学习笔记十九 Rust中的trait</a>
           </li>
         
@@ -814,10 +949,6 @@
         
           <li>
             <a href="/2024/10/12/rust16/">rust 学习笔记十六 Rust 智能指针</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
           </li>
         
       </ul>
