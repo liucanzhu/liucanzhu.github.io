@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记二十二 Rust中的迭代器&amp;关联类型 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="（一）什么是迭代器迭代器模式:对一系列项执行某些任务 迭代器负责遍历每个项,确定序列(遍历)何时完成 Rust的迭代器是懒惰的，除非调用消费迭代器的方法,否则迭代器本身没有有任何效果 （二）迭代器的实现迭代器是一个能够逐一生成元素的对象。它提供了一个统一的接口,用于遍历容器中的元素,同时保证了类型安全和内存安全。在Rust中,迭代器是实现了Iterator trait的对象。该trait定义了一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记二十二 Rust中的迭代器&amp;关联类型">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/10/29/rust22/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="（一）什么是迭代器迭代器模式:对一系列项执行某些任务 迭代器负责遍历每个项,确定序列(遍历)何时完成 Rust的迭代器是懒惰的，除非调用消费迭代器的方法,否则迭代器本身没有有任何效果 （二）迭代器的实现迭代器是一个能够逐一生成元素的对象。它提供了一个统一的接口,用于遍历容器中的元素,同时保证了类型安全和内存安全。在Rust中,迭代器是实现了Iterator trait的对象。该trait定义了一个">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-10-29T14:51:01.745Z">
+<meta property="article:modified_time" content="2024-10-30T16:03:40.051Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust22" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/29/rust22/" class="article-date">
+  <time class="dt-published" datetime="2024-10-29T14:51:01.745Z" itemprop="datePublished">2024-10-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记二十二 Rust中的迭代器&amp;关联类型
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）什么是迭代器"><a href="#（一）什么是迭代器" class="headerlink" title="（一）什么是迭代器"></a>（一）什么是迭代器</h3><p>迭代器模式:对一系列项执行某些任务</p>
+<p>迭代器负责遍历每个项,确定序列(遍历)何时完成</p>
+<p>Rust的迭代器是懒惰的，除非调用<strong>消费迭代器</strong>的方法,否则迭代器本身没有有任何效果</p>
+<h3 id="（二）迭代器的实现"><a href="#（二）迭代器的实现" class="headerlink" title="（二）迭代器的实现"></a>（二）迭代器的实现</h3><p>迭代器是一个能够逐一生成元素的对象。它提供了一个统一的接口,用于遍历容器中的元素,同时保证了类型安全和内存安全。在Rust中,迭代器是实现了Iterator trait的对象。该trait定义了一个<strong>next方法,用于返回下一个元素</strong>。所有迭代器都实现了Iterator Trait,Iterator Trait定义于标准库,定义大致如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pub trait Iterator&#123;</span><br><span class="line">    type Item;</span><br><span class="line">    fn next(&amp;mut self)-&gt; Option&lt;Self::Item&gt;;</span><br><span class="line">    //methods with default inplementations elided</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>type item和Self::item定义了与此该trait关联的类型。</p>
+<p>实现Iterator trait需要你定义一个Item类型,它用于<strong>next方法的返回类型(迭代器的返回类型)</strong></p>
+<h3 id="（三）关联类型"><a href="#（三）关联类型" class="headerlink" title="（三）关联类型"></a>（三）关联类型</h3><p>关联类型是Trait中的类型占位符,它可以用于Trait的方法签名中，可以定义出包含某些类型的Trait,而在实现前无需知道这些类型是什么</p>
+<h4 id="关联类型与泛型的区别"><a href="#关联类型与泛型的区别" class="headerlink" title="关联类型与泛型的区别"></a>关联类型与泛型的区别</h4><p>范型</p>
+<p>每次实现Trait时标注类型<br>可以为一个类型多次实现某个Trait(不同的泛型参数)</p>
+<p>关联类型</p>
+<p>无需标注类型<br>无法为单个类型多次实现某个Trait</p>
+<h3 id="（四）简单迭代器"><a href="#（四）简单迭代器" class="headerlink" title="（四）简单迭代器"></a>（四）简单迭代器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">let numbers=vec![1,2,3,4,5];</span><br><span class="line">let mut iter=numbers.iter();//创建迭代器</span><br><span class="line">while let Some(num)=iter.next()&#123;//使用迭代器逐一获取元素</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;,num);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">let v1 = vec![1,2,3];</span><br><span class="line">let v1_iter = v1.iter();</span><br><span class="line">for val in v1_iter&#123;</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>解释:<br>numbers.iter()创建了一个迭代器,该迭代器按顺序返回 numbers向量中的每个元素。<br>iter.next()返回迭代器中的下一个元素。如果没有更更多元素,返回None</p>
+<p>在上面的两种遍历方法中，如果是使用 while let Some(xxx)&#x3D;iter.next()的语法遍历，要求iter必须声明为mut,而for…in iter的语法遍历，却不用将其声明为mut,可以理解为，在第一种遍历方式中，每一次next，都会消耗迭代器中的一个元素，会<strong>使迭代器发生变化</strong>，所以需要将其声明为mut,而是用for in时，是通过引用获取到其中每一个变量的所有权，而不改变迭代器本身</p>
+<h3 id="（五）几个迭代的方法"><a href="#（五）几个迭代的方法" class="headerlink" title="（五）几个迭代的方法"></a>（五）几个迭代的方法</h3><p>iter方法:在不可变引用上创建迭代器</p>
+<p>into_iter方法:创建的迭代器会获得所有权</p>
+<p>iter_mut方法:迭代可变的引用</p>
+<h3 id="（六）消耗迭代器的方法"><a href="#（六）消耗迭代器的方法" class="headerlink" title="（六）消耗迭代器的方法"></a>（六）消耗迭代器的方法</h3><p>在标准库中,Iterator trait有一些带默认实现的方法，其中有一些方法会调用next方法，这也是实现Iterator trait时必须实现next方法的原因之一</p>
+<p><strong>调用next的方法叫做”消耗型适配器”，因为调用它们会把迭代器消耗尽</strong></p>
+<p>例如:sum方法(就会耗尽迭代器)<br>。取得迭代器的所有权<br>。通过反复调用next,遍历所有元素<br>。每次迭代,把当前元素添加到一个总和里,迭代结束,返回总和</p>
+<h3 id="（七）产生其他迭代器的方法"><a href="#（七）产生其他迭代器的方法" class="headerlink" title="（七）产生其他迭代器的方法"></a>（七）产生其他迭代器的方法</h3><p>定义在Iterator trait上的另外一些方法叫做”迭代器适配器”，把迭代器转换为不同种类的迭代器，可以通过链式调用使用多个迭代器适配器来执行复杂的操作,这种调用可读性较高。</p>
+<p>比如：</p>
+<h4 id="1-map方法"><a href="#1-map方法" class="headerlink" title="1.map方法"></a>1.map方法</h4><p>map方法允许我们对迭代器中的每个元素应用一个函数,并返回一个新的迭代器。</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    let numbers=vec![1,2,3,4,5];</span><br><span class="line">    let squares:Vec&lt;i32&gt;=numbers.iter()</span><br><span class="line">    .map(|x|x*x)//每个元素平方</span><br><span class="line">    .collect();//收集结果</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,squares);//输出[1,4,9,16,25]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>map将一个闭包应用于每个元素,这里是计算平方。</p>
+<p>collect消耗型适配器,将迭代器的结果收集到一个容器中,这里是Vec<i32>。</p>
+<h4 id="2-filter-方法"><a href="#2-filter-方法" class="headerlink" title="2.filter 方法"></a>2.filter 方法</h4><p>filter方法允许我们根据条件筛选元素,并返回满足条件的元素的迭代器</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    let numbers=vec![1,2,3,4,5];</span><br><span class="line">    let even_numbers:Vec&lt;_&gt;=numbers.iter()</span><br><span class="line">    .filter(|&amp;x|x % 2==0)//筛选偶数</span><br><span class="line">    .collect();</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,even_numbers);//输出[2,4]</span><br><span class="line">&#125;   </span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>filter筛选出所有满足闭包条件(偶数)的元素。</p>
+<h3 id="（八）自定义迭代器"><a href="#（八）自定义迭代器" class="headerlink" title="（八）自定义迭代器"></a>（八）自定义迭代器</h3><p>即实现 Iterator trait</p>
+<p>可以通过实现Iterator trait来创建自己的迭代器。<strong>必须实现next方法</strong>,该方法定义了迭代器如何产生下一个元素。</p>
+<p>示例:自定义计数迭代器</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">struct Counter &#123;</span><br><span class="line">    count: u32,</span><br><span class="line">&#125;</span><br><span class="line">impl Counter&#123;</span><br><span class="line">    fn new() -&gt; Counter &#123;</span><br><span class="line">        Counter&#123;count:0&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">impl Iterator for Counter&#123;</span><br><span class="line">    type Item=u32;</span><br><span class="line">    </span><br><span class="line">    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; &#123;</span><br><span class="line">        self.count += 1;</span><br><span class="line">        if self.count &lt;= 5 &#123;</span><br><span class="line">            Some(self.count)</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">            None</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut counter = Counter::new();</span><br><span class="line">    while let Some(count)= counter.next()&#123;</span><br><span class="line">        println!(&quot;&#123;&#125;&quot;,count)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>Counter结构体实现了Iterator trait,其中next方法每次返回下一个计数值,直到达到5为止.</p>
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>用自定义迭代器生成斐波那契数列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">struct Fibonacci &#123;</span><br><span class="line">    curr: u32,</span><br><span class="line">    next: u32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Implement `Iterator` for `Fibonacci`.</span><br><span class="line">// The `Iterator` trait only requires a method to be defined for the `next` element.</span><br><span class="line">impl Iterator for Fibonacci &#123;</span><br><span class="line">    // We can refer to this type using Self::Item</span><br><span class="line">    type Item = u32;</span><br><span class="line">    </span><br><span class="line">    /* Implement next method */</span><br><span class="line">    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;&#123;</span><br><span class="line">       if self.curr &gt; self.next &#123;</span><br><span class="line">            self.next = self.next + self.curr;</span><br><span class="line">            Some(self.curr)</span><br><span class="line">        &#125;else &#123;</span><br><span class="line">            self.curr = self.next + self.curr;</span><br><span class="line">            Some(self.next)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Returns a Fibonacci sequence generator</span><br><span class="line">fn fibonacci() -&gt; Fibonacci &#123;</span><br><span class="line">    Fibonacci &#123; curr: 0, next: 1 &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut fib = fibonacci();</span><br><span class="line">    for i in 0..10 &#123;</span><br><span class="line">        if let Some(v) = fib.next()&#123;</span><br><span class="line">            println!(&quot;&#123;:?&#125;&quot;,v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/29/rust22/" data-id="cm2w1xdy3000028uy5t66aqa4" data-title="rust 学习笔记二十二 Rust中的迭代器&amp;关联类型" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/10/27/rust21/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记二十一 Rust中的闭包</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/26/rust20/">rust 学习笔记二十 Rust中的宏</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/22/rust19/">rust 学习笔记十九 Rust中的trait</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/15/rust18/">rust 学习笔记十八 Rust中的生命周期</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

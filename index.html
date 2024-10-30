@@ -69,6 +69,94 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust22" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/29/rust22/" class="article-date">
+  <time class="dt-published" datetime="2024-10-29T14:51:01.745Z" itemprop="datePublished">2024-10-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）什么是迭代器"><a href="#（一）什么是迭代器" class="headerlink" title="（一）什么是迭代器"></a>（一）什么是迭代器</h3><p>迭代器模式:对一系列项执行某些任务</p>
+<p>迭代器负责遍历每个项,确定序列(遍历)何时完成</p>
+<p>Rust的迭代器是懒惰的，除非调用<strong>消费迭代器</strong>的方法,否则迭代器本身没有有任何效果</p>
+<h3 id="（二）迭代器的实现"><a href="#（二）迭代器的实现" class="headerlink" title="（二）迭代器的实现"></a>（二）迭代器的实现</h3><p>迭代器是一个能够逐一生成元素的对象。它提供了一个统一的接口,用于遍历容器中的元素,同时保证了类型安全和内存安全。在Rust中,迭代器是实现了Iterator trait的对象。该trait定义了一个<strong>next方法,用于返回下一个元素</strong>。所有迭代器都实现了Iterator Trait,Iterator Trait定义于标准库,定义大致如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">pub trait Iterator&#123;</span><br><span class="line">    type Item;</span><br><span class="line">    fn next(&amp;mut self)-&gt; Option&lt;Self::Item&gt;;</span><br><span class="line">    //methods with default inplementations elided</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>type item和Self::item定义了与此该trait关联的类型。</p>
+<p>实现Iterator trait需要你定义一个Item类型,它用于<strong>next方法的返回类型(迭代器的返回类型)</strong></p>
+<h3 id="（三）关联类型"><a href="#（三）关联类型" class="headerlink" title="（三）关联类型"></a>（三）关联类型</h3><p>关联类型是Trait中的类型占位符,它可以用于Trait的方法签名中，可以定义出包含某些类型的Trait,而在实现前无需知道这些类型是什么</p>
+<h4 id="关联类型与泛型的区别"><a href="#关联类型与泛型的区别" class="headerlink" title="关联类型与泛型的区别"></a>关联类型与泛型的区别</h4><p>范型</p>
+<p>每次实现Trait时标注类型<br>可以为一个类型多次实现某个Trait(不同的泛型参数)</p>
+<p>关联类型</p>
+<p>无需标注类型<br>无法为单个类型多次实现某个Trait</p>
+<h3 id="（四）简单迭代器"><a href="#（四）简单迭代器" class="headerlink" title="（四）简单迭代器"></a>（四）简单迭代器</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">let numbers=vec![1,2,3,4,5];</span><br><span class="line">let mut iter=numbers.iter();//创建迭代器</span><br><span class="line">while let Some(num)=iter.next()&#123;//使用迭代器逐一获取元素</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;,num);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">let v1 = vec![1,2,3];</span><br><span class="line">let v1_iter = v1.iter();</span><br><span class="line">for val in v1_iter&#123;</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,val);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>解释:<br>numbers.iter()创建了一个迭代器,该迭代器按顺序返回 numbers向量中的每个元素。<br>iter.next()返回迭代器中的下一个元素。如果没有更更多元素,返回None</p>
+<p>在上面的两种遍历方法中，如果是使用 while let Some(xxx)&#x3D;iter.next()的语法遍历，要求iter必须声明为mut,而for…in iter的语法遍历，却不用将其声明为mut,可以理解为，在第一种遍历方式中，每一次next，都会消耗迭代器中的一个元素，会<strong>使迭代器发生变化</strong>，所以需要将其声明为mut,而是用for in时，是通过引用获取到其中每一个变量的所有权，而不改变迭代器本身</p>
+<h3 id="（五）几个迭代的方法"><a href="#（五）几个迭代的方法" class="headerlink" title="（五）几个迭代的方法"></a>（五）几个迭代的方法</h3><p>iter方法:在不可变引用上创建迭代器</p>
+<p>into_iter方法:创建的迭代器会获得所有权</p>
+<p>iter_mut方法:迭代可变的引用</p>
+<h3 id="（六）消耗迭代器的方法"><a href="#（六）消耗迭代器的方法" class="headerlink" title="（六）消耗迭代器的方法"></a>（六）消耗迭代器的方法</h3><p>在标准库中,Iterator trait有一些带默认实现的方法，其中有一些方法会调用next方法，这也是实现Iterator trait时必须实现next方法的原因之一</p>
+<p><strong>调用next的方法叫做”消耗型适配器”，因为调用它们会把迭代器消耗尽</strong></p>
+<p>例如:sum方法(就会耗尽迭代器)<br>。取得迭代器的所有权<br>。通过反复调用next,遍历所有元素<br>。每次迭代,把当前元素添加到一个总和里,迭代结束,返回总和</p>
+<h3 id="（七）产生其他迭代器的方法"><a href="#（七）产生其他迭代器的方法" class="headerlink" title="（七）产生其他迭代器的方法"></a>（七）产生其他迭代器的方法</h3><p>定义在Iterator trait上的另外一些方法叫做”迭代器适配器”，把迭代器转换为不同种类的迭代器，可以通过链式调用使用多个迭代器适配器来执行复杂的操作,这种调用可读性较高。</p>
+<p>比如：</p>
+<h4 id="1-map方法"><a href="#1-map方法" class="headerlink" title="1.map方法"></a>1.map方法</h4><p>map方法允许我们对迭代器中的每个元素应用一个函数,并返回一个新的迭代器。</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    let numbers=vec![1,2,3,4,5];</span><br><span class="line">    let squares:Vec&lt;i32&gt;=numbers.iter()</span><br><span class="line">    .map(|x|x*x)//每个元素平方</span><br><span class="line">    .collect();//收集结果</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,squares);//输出[1,4,9,16,25]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>map将一个闭包应用于每个元素,这里是计算平方。</p>
+<p>collect消耗型适配器,将迭代器的结果收集到一个容器中,这里是Vec<i32>。</p>
+<h4 id="2-filter-方法"><a href="#2-filter-方法" class="headerlink" title="2.filter 方法"></a>2.filter 方法</h4><p>filter方法允许我们根据条件筛选元素,并返回满足条件的元素的迭代器</p>
+<p>示例:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    let numbers=vec![1,2,3,4,5];</span><br><span class="line">    let even_numbers:Vec&lt;_&gt;=numbers.iter()</span><br><span class="line">    .filter(|&amp;x|x % 2==0)//筛选偶数</span><br><span class="line">    .collect();</span><br><span class="line">    println!(&quot;&#123;:?&#125;&quot;,even_numbers);//输出[2,4]</span><br><span class="line">&#125;   </span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>filter筛选出所有满足闭包条件(偶数)的元素。</p>
+<h3 id="（八）自定义迭代器"><a href="#（八）自定义迭代器" class="headerlink" title="（八）自定义迭代器"></a>（八）自定义迭代器</h3><p>即实现 Iterator trait</p>
+<p>可以通过实现Iterator trait来创建自己的迭代器。<strong>必须实现next方法</strong>,该方法定义了迭代器如何产生下一个元素。</p>
+<p>示例:自定义计数迭代器</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">struct Counter &#123;</span><br><span class="line">    count: u32,</span><br><span class="line">&#125;</span><br><span class="line">impl Counter&#123;</span><br><span class="line">    fn new() -&gt; Counter &#123;</span><br><span class="line">        Counter&#123;count:0&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">impl Iterator for Counter&#123;</span><br><span class="line">    type Item=u32;</span><br><span class="line">    </span><br><span class="line">    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt; &#123;</span><br><span class="line">        self.count += 1;</span><br><span class="line">        if self.count &lt;= 5 &#123;</span><br><span class="line">            Some(self.count)</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">            None</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut counter = Counter::new();</span><br><span class="line">    while let Some(count)= counter.next()&#123;</span><br><span class="line">        println!(&quot;&#123;&#125;&quot;,count)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解释:</p>
+<p>Counter结构体实现了Iterator trait,其中next方法每次返回下一个计数值,直到达到5为止.</p>
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>用自定义迭代器生成斐波那契数列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">struct Fibonacci &#123;</span><br><span class="line">    curr: u32,</span><br><span class="line">    next: u32,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Implement `Iterator` for `Fibonacci`.</span><br><span class="line">// The `Iterator` trait only requires a method to be defined for the `next` element.</span><br><span class="line">impl Iterator for Fibonacci &#123;</span><br><span class="line">    // We can refer to this type using Self::Item</span><br><span class="line">    type Item = u32;</span><br><span class="line">    </span><br><span class="line">    /* Implement next method */</span><br><span class="line">    fn next(&amp;mut self) -&gt; Option&lt;Self::Item&gt;&#123;</span><br><span class="line">       if self.curr &gt; self.next &#123;</span><br><span class="line">            self.next = self.next + self.curr;</span><br><span class="line">            Some(self.curr)</span><br><span class="line">        &#125;else &#123;</span><br><span class="line">            self.curr = self.next + self.curr;</span><br><span class="line">            Some(self.next)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Returns a Fibonacci sequence generator</span><br><span class="line">fn fibonacci() -&gt; Fibonacci &#123;</span><br><span class="line">    Fibonacci &#123; curr: 0, next: 1 &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut fib = fibonacci();</span><br><span class="line">    for i in 0..10 &#123;</span><br><span class="line">        if let Some(v) = fib.next()&#123;</span><br><span class="line">            println!(&quot;&#123;:?&#125;&quot;,v);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/29/rust22/" data-id="cm2w1xdy3000028uy5t66aqa4" data-title="rust 学习笔记二十二 Rust中的迭代器&amp;关联类型" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust21" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/10/27/rust21/" class="article-date">
@@ -918,127 +1006,6 @@
 
 
   
-    <article id="post-rust12" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/21/rust12/" class="article-date">
-  <time class="dt-published" datetime="2024-09-21T09:29:21.620Z" itemprop="datePublished">2024-09-21</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Rust中的集合主要分为两类， Vector和HashMap</p>
-<h3 id="（一）Vector"><a href="#（一）Vector" class="headerlink" title="（一）Vector"></a>（一）Vector</h3><p>什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。</p>
-<p>为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。</p>
-<p>举例：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> number = 13;</span><br><span class="line">    match number &#123;</span><br><span class="line">    1=&gt;println!(<span class="string">&quot;One!&quot;</span>),</span><br><span class="line">    2=&gt;println!(<span class="string">&quot;Two!&quot;</span>),</span><br><span class="line">    3=&gt;println! (<span class="string">&quot;Three!&quot;</span>),</span><br><span class="line">    _=&gt;println!(<span class="string">&quot;Something else!&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h3 id="（二）模式匹配的各种模式"><a href="#（二）模式匹配的各种模式" class="headerlink" title="（二）模式匹配的各种模式"></a>（二）模式匹配的各种模式</h3><p>1.字面量模式</p>
-<p>最为常见，上面举的基础例子就是字面量模式，<strong>必须穷举</strong>,列出所有可能性,通常与通配符模式搭配使用</p>
-<p>2.变量模式</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> x= 42;</span><br><span class="line">match x&#123;</span><br><span class="line">    var =&gt; println!(<span class="string">&quot;The value is:&#123;&#125;&quot;</span>,var),</span><br><span class="line">&#125;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,x);</span><br></pre></td></tr></table></figure>
-
-<p>当变量为i32类型时，可以正常工作，当变量为没实现Copy trait的String类型时,存在报错：</p>
-<p><img src="/../assets/img/12-1.jpg" alt="图12-1" title="12-1"></p>
-<p>因为发生了所有权的转移</p>
-<p>3.通配符模式：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">match x&#123;</span><br><span class="line">_=&gt; println!(<span class="string">&quot;Any value&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>4.结构模式</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    struct Point&#123;x:i32,y:i32&#125;</span><br><span class="line">    <span class="built_in">let</span> p = Point&#123;x:0,y:7&#125;;</span><br><span class="line">    match p &#123;</span><br><span class="line">        Point&#123;x,y:0&#125; =&gt; println!(<span class="string">&quot;On the x axis at &#123;&#125;&quot;</span>,x),</span><br><span class="line">        Point&#123;x:0,y&#125; =&gt; println!(<span class="string">&quot;On the y axis at &#123;&#125;&quot;</span>,y),</span><br><span class="line">        Point&#123;x,y&#125;=&gt;println!(<span class="string">&quot;On neither axis:(&#123;&#125;,&#123;&#125;)&quot;</span>,x,y),</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>将会在第一个匹配到的项中输出,其余的元组模式、枚举模式、解构模式都与之类似,需要在匹配项中解构</p>
-<p>5.守卫与绑定</p>
-<p>a.守卫:在模式匹配中,可以使用守卫来添加额外的条件判断</p>
-<p><img src="/../assets/img/12-3.jpg" alt="图12-3" title="12-3"></p>
-<p>b.绑定:在模式匹配中,可以使用绑定来将模式中的值绑定到变量上</p>
-<p><img src="/../assets/img/12-2.jpg" alt="图12-2" title="12-2"></p>
-<p>使用一个@可以规定范围,再举例一个比较复杂的枚举绑定模式：</p>
-<p><img src="/../assets/img/12-4.jpg" alt="图12-4" title="12-4"></p>
-<h3 id="（三）应用场景"><a href="#（三）应用场景" class="headerlink" title="（三）应用场景"></a>（三）应用场景</h3><p>1.处理错误</p>
-<p>原本返回Result的函数写法是：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn divide(a:i32,b:i32)-&gt;Result&lt;i32,String&gt;&#123;</span><br><span class="line">        <span class="keyword">if</span> b==0&#123;</span><br><span class="line">        Err(String::from(<span class="string">&quot;Cannotdivide by zero&quot;</span>))</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        Ok(a/b)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>现在可以改为match,更易读：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">match divide(4,2)&#123;</span><br><span class="line">    Ok(result)=&gt; println!(<span class="string">&quot;Result is &#123;&#125;&quot;</span>, result),</span><br><span class="line">    Err(e) =&gt; println!(<span class="string">&quot;Error:&#123;&#125;&quot;</span>,e),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ol start="2">
-<li>解析命令行参数</li>
-<li>解析配置文件</li>
-<li>解析数据包</li>
-<li>解析XML或JSON等数据格式</li>
-</ol>
-<h3 id="（四）高级模式匹配技巧"><a href="#（四）高级模式匹配技巧" class="headerlink" title="（四）高级模式匹配技巧"></a>（四）高级模式匹配技巧</h3><p>1.嵌套模式：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">enum Message &#123;</span><br><span class="line">    Quit,</span><br><span class="line">    Move&#123;x:i32,y:i32&#125;,</span><br><span class="line">    Write(String),</span><br><span class="line">    ChangeColor(i32,i32,i32),</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">let</span> msg = Message::ChangeColor(0,160,255);</span><br><span class="line">match msg &#123;</span><br><span class="line">    Message::ChangeColor(r,g,b)=&gt;println!(<span class="string">&quot;Change the color to red &#123;&#125;, green &#123;&#125;,and blue&#123;&#125;&quot;</span>,r,g,b),</span><br><span class="line">    _=&gt;&#123;&#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
-
-<p>2.模式匹配与迭代器:结合iter和match使用</p>
-<p><img src="/../assets/img/12-5.jpg" alt="图12-5" title="12-5"></p>
-<p>可见将vec1和 vec2的对应元素进行了匹配</p>
-<p>3.if let 和 while let:</p>
-<p>简化单个模式匹配</p>
-<p><img src="/../assets/img/12-7.jpg" alt="图12-7" title="12-7"></p>
-<p>4.ref 和 mut ref</p>
-<p>使用场景：</p>
-<p>借用数据而不转移所有权:在某些情况下,你只需要借用数据而不是转移其所有权。例如在递归数据结构中,借用数据可以避免所有权转移带来的复杂性。</p>
-<p>对数据进行修改:使用ref mut可以在模式匹配时对数据进行修改,而无需转移所有权。</p>
-<p><img src="/../assets/img/12-6.jpg" alt="图12-6" title="12-6"></p>
-<p>附加：假设你有一个包含用户信息的JSON字符串:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;nane&quot;</span>:<span class="string">&quot;Alice&quot;</span>,</span><br><span class="line">    <span class="string">&quot;age&quot;</span>: 30,</span><br><span class="line">    <span class="string">&quot;email&quot;</span>: <span class="string">&quot;alicefexanple.con&quot;</span>,</span><br><span class="line">    <span class="string">&quot;address&quot;</span>:&#123;</span><br><span class="line">        <span class="string">&quot;street&quot;</span>: <span class="string">&quot;123 Main St&quot;</span>,</span><br><span class="line">        <span class="string">&quot;city&quot;</span>:<span class="string">&quot;Wonderland&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;phone_numbers&quot;</span>: [<span class="string">&quot;123-456-7890&quot;</span>, <span class="string">&quot;987-654-3210&quot;</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>使用 serde_json库解析JSON字符串, 使用模式匹配提取JSON对象中的不同字段, 处理不同类型的数据(字符串、数字、数组、嵌套对象等):</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">use serde_json::&#123;Value, Error&#125;;</span><br><span class="line"></span><br><span class="line">fn main() -&gt; Result&lt;(), Error&gt; &#123;</span><br><span class="line">    // JSON 字符串</span><br><span class="line">    <span class="built_in">let</span> json_str = r#<span class="string">&quot;</span></span><br><span class="line"><span class="string">        &#123;</span></span><br><span class="line"><span class="string">            &quot;</span>name<span class="string">&quot;: &quot;</span>Alice<span class="string">&quot;,</span></span><br><span class="line"><span class="string">            &quot;</span>age<span class="string">&quot;: 30,</span></span><br><span class="line"><span class="string">            &quot;</span>email<span class="string">&quot;: &quot;</span>alice@example.com<span class="string">&quot;,</span></span><br><span class="line"><span class="string">            &quot;</span>address<span class="string">&quot;: &#123;</span></span><br><span class="line"><span class="string">                &quot;</span>street<span class="string">&quot;: &quot;</span>123 Main St<span class="string">&quot;,</span></span><br><span class="line"><span class="string">                &quot;</span>city<span class="string">&quot;: &quot;</span>Wonderland<span class="string">&quot;</span></span><br><span class="line"><span class="string">            &#125;,</span></span><br><span class="line"><span class="string">            &quot;</span>phone_numbers<span class="string">&quot;: [&quot;</span>123-456-7890<span class="string">&quot;, &quot;</span>987-654-3210<span class="string">&quot;]</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">    &quot;</span>#;</span><br><span class="line"></span><br><span class="line">    // 解析 JSON 字符串</span><br><span class="line">    <span class="built_in">let</span> v: Value = serde_json::from_str(json_str)?;</span><br><span class="line">    println!(<span class="string">&quot;aaaa&#123;:?&#125;&quot;</span>,v);</span><br><span class="line">    // 使用模式匹配提取字段</span><br><span class="line">    match v &#123;</span><br><span class="line">        // 匹配嵌套对象</span><br><span class="line">        Value::Object(m) =&gt; &#123;</span><br><span class="line">            // 提取字符串字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(name) = m.get(<span class="string">&quot;name&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Name: &#123;&#125;&quot;</span>, name);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(email) = m.get(<span class="string">&quot;email&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Email: &#123;&#125;&quot;</span>, email);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取数字字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(age) = m.get(<span class="string">&quot;age&quot;</span>).and_then(Value::as_i64) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Age: &#123;&#125;&quot;</span>, age);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取嵌套对象</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(address) = m.get(<span class="string">&quot;address&quot;</span>) &#123;</span><br><span class="line">                match address &#123;</span><br><span class="line">                    Value::Object(addr) =&gt; &#123;</span><br><span class="line">                        <span class="keyword">if</span> <span class="built_in">let</span> Some(street) = addr.get(<span class="string">&quot;street&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                            println!(<span class="string">&quot;Street: &#123;&#125;&quot;</span>, street);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> <span class="built_in">let</span> Some(city) = addr.get(<span class="string">&quot;city&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                            println!(<span class="string">&quot;City: &#123;&#125;&quot;</span>, city);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    _ =&gt; println!(<span class="string">&quot;Address is not an object&quot;</span>),</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取数组字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(phone_numbers) = m.get(<span class="string">&quot;phone_numbers&quot;</span>) &#123;</span><br><span class="line">                match phone_numbers &#123;</span><br><span class="line">                    Value::Array(nums) =&gt; &#123;</span><br><span class="line">                        println!(<span class="string">&quot;Phone numbers:&quot;</span>);</span><br><span class="line">                        <span class="keyword">for</span> num <span class="keyword">in</span> nums &#123;</span><br><span class="line">                            <span class="keyword">if</span> <span class="built_in">let</span> Some(n) = num.<span class="function"><span class="title">as_str</span></span>() &#123;</span><br><span class="line">                                println!(<span class="string">&quot;  &#123;&#125;&quot;</span>, n);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    _ =&gt; println!(<span class="string">&quot;Phone numbers are not an array&quot;</span>),</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        _ =&gt; println!(<span class="string">&quot;JSON is not an object&quot;</span>),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Ok(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/21/rust12/" data-id="cm1bybu85000020uy38i6b4c5" data-title="rust 学习笔记十三 Rust 中的集合" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1075,6 +1042,10 @@
       <ul>
         
           <li>
+            <a href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
+          </li>
+        
+          <li>
             <a href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
           </li>
         
@@ -1088,10 +1059,6 @@
         
           <li>
             <a href="/2024/10/15/rust18/">rust 学习笔记十八 Rust中的生命周期</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/13/rust17/">rust 学习笔记十七 Rust 泛型</a>
           </li>
         
       </ul>

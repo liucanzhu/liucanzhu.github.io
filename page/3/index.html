@@ -69,6 +69,86 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/04/rust2/" class="article-date">
+  <time class="dt-published" datetime="2024-09-04T13:38:52.377Z" itemprop="datePublished">2024-09-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/04/rust2/">rust 学习笔记二 变量与可变性</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Rust 是一门安全性非常强的系统级语言，故了解不同种类变量的特性以及使用场景十分重要，本文主要从以下几个步骤来讲解rust中的变量与可变性:<br><strong>可变变量和不可变变量，常量，静态变量，变量遮蔽</strong>.</p>
+<h3 id="（一）可变变量和不可变变量"><a href="#（一）可变变量和不可变变量" class="headerlink" title="（一）	可变变量和不可变变量"></a>（一）	可变变量和不可变变量</h3><p>先举出示例如下：<br>直接通过    </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = 32;</span><br><span class="line">println!(<span class="string">&quot;value of a is &#123;&#125;&quot;</span>, a);</span><br></pre></td></tr></table></figure>
+<p>为变量a赋值为正整数32，并打印，控制台执行<code>cargo run</code>得到输出如下：.</p>
+<p><img src="/../assets/img/2-1.jpg" alt="图2-1" title="2-1"></p>
+<p>此时如果直接尝试修改a的值，会得到错误提示如下：.</p>
+<p><img src="/../assets/img/2-2.jpg" alt="图2-2" title="2-2"></p>
+<p>此时的a就是一个不可变变量，根据提示，我们可以通过在变量名前通过<strong>mut修饰</strong>将其变为一个可变变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut a = 32;</span><br></pre></td></tr></table></figure>
+<p>此时再执行<code>cargo run</code>,发现值被成功修改（会有警告，这个后文再谈），说明此时的a是一个可变变量.</p>
+<h3 id="（二）常量"><a href="#（二）常量" class="headerlink" title="（二）	常量"></a>（二）	常量</h3><p>先举出一个正确示例：.</p>
+<p><img src="/../assets/img/2-3.jpg" alt="图2-3" title="2-3"></p>
+<p>使用<code>const name:type = value</code>的解构定义即可<br>常量定义需注意以下几点：<br>定义时<strong>指定数据类型</strong>，否则报错：.</p>
+<p><img src="/../assets/img/2-4.jpg" alt="图2-4" title="2-4"></p>
+<p>变量名使用<strong>大写字母</strong>, 否则警告：.</p>
+<p><img src="/../assets/img/2-5.jpg" alt="图2-5" title="2-5"></p>
+<p>定义时必须<strong>赋初始值</strong>，否则报错：.</p>
+<p><img src="/../assets/img/2-6.jpg" alt="图2-1" title="2-6"></p>
+<p><strong>不支持重定义或者修改初始值</strong>，否则报错：.</p>
+<p><img src="/../assets/img/2-7.jpg" alt="图2-7" title="2-7"></p>
+<p>以上这些特性与js 中的常量定义有很大相似之处</p>
+<p>此外，常量与上文中的不可变变量有以下区别：</p>
+<p>常量使用<strong>const</strong>进行声明,不可变变量使用<strong>let</strong>进行声明.</p>
+<p>常量在编译时就确定了值,<strong>不能在运行时改变</strong>。不可变变量直到运行时才能确定下来.</p>
+<p>常量不可以修改,不可变变量可以通过<strong>变量遮蔽来二次定义</strong>.</p>
+<p>常量必须声明类型,不可变变量不需要声明类型.</p>
+<p>常量必须使用<strong>大写字母</strong>,不可变变量不需要.</p>
+<h3 id="（三）静态变量"><a href="#（三）静态变量" class="headerlink" title="（三）	静态变量"></a>（三）	静态变量</h3><p>先正确示例如下：.</p>
+<p><img src="/../assets/img/2-8.jpg" alt="图2-8" title="2-8"></p>
+<p>静态变量有以下特性：</p>
+<p>使用<strong>static</strong>声明，在编译时分配内存，运行时一直存在.</p>
+<p>可以在多个线程之间共享（全局变量）.</p>
+<p>一经定义之后<strong>不可更改</strong>，且也需要大写和指明类型.</p>
+<p>与上文中的常量有很多相似之处.</p>
+<p>但不同之处在于，<strong>静态变量可通过mut修饰进行修改</strong>，但是修改的代码必须放在<strong>unsafe block</strong>内，如下所示：.</p>
+<p><img src="/../assets/img/2-9.jpg" alt="图2-9" title="2-9"></p>
+<p>常量在编译时被内联,但静态变量不会。在整个程序中静态变量只有一个实例,也就是说所有引用都指向同一个地址.</p>
+<h3 id="（四）-变量遮蔽"><a href="#（四）-变量遮蔽" class="headerlink" title="（四）	 变量遮蔽"></a>（四）	 变量遮蔽</h3><p>示例如下：.</p>
+<p><img src="/../assets/img/2-10.jpg" alt="图2-10" title="2-10"><br><img src="/../assets/img/2-11.jpg" alt="图2-11" title="2-11"><br>对于变量，可以直接通过let重复定义将之前的值覆盖掉.</p>
+<p>此外，还有如下示例：.</p>
+<p><img src="/../assets/img/2-12.jpg" alt="图2-12" title="2-12"></p>
+<p>可以看出来，变量遮蔽只会在修改代码的小范围作用域内生效，并不能对外层生效.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/04/rust2/" data-id="cm0sf9tq30002sguy0gr82kin" data-title="rust 学习笔记二 变量与可变性" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust1" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/02/rust1/" class="article-date">
@@ -171,6 +251,10 @@
       <ul>
         
           <li>
+            <a href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
+          </li>
+        
+          <li>
             <a href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
           </li>
         
@@ -184,10 +268,6 @@
         
           <li>
             <a href="/2024/10/15/rust18/">rust 学习笔记十八 Rust中的生命周期</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/13/rust17/">rust 学习笔记十七 Rust 泛型</a>
           </li>
         
       </ul>
