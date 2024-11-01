@@ -83,7 +83,7 @@
         
   
     <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/31/rust23/">rust 学习笔记二十二 Rust测试</a>
+      <a class="p-name article-title" href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
     </h1>
   
 
@@ -93,9 +93,9 @@
       
         <p>Rust支持以下测试：</p>
 <h3 id="（一）Unit"><a href="#（一）Unit" class="headerlink" title="（一）Unit"></a>（一）Unit</h3><p>单元测试实例如下：</p>
-<p>23-1</p>
+<p><img src="/../assets/img/23-1.jpg" alt="图23-1" title="23-1"></p>
 <p>直接点击每一个mod上方的运行符号即可执行这个测试mod并在终端查看运行结果,在mod中每一个测试函数上方，都用一个属性宏#[test]来表示这是一个单元测试，在函数中，除了用assert_eq!()来判断是否执行成功以外，也可以通过返回Result类型，如下所示：</p>
-<p>23-2</p>
+<p><img src="/../assets/img/23-2.jpg" alt="图23-2" title="23-2"></p>
 <p>当我们在这个函数中手动抛出一个Err()时，运行结果显示测试结果失败</p>
 <p>已知暂未开发完的函数，不希望发生panic的情况下，需要在函数中调用todo!宏，并在函数上方注明    #[should_panic]，即可跳过报错，如果需要跳过整个单元测试，则需要在函数上方注明：    #[ignore]</p>
 <h3 id="（二）Integration"><a href="#（二）Integration" class="headerlink" title="（二）Integration"></a>（二）Integration</h3><p>在根目录下新建tests文件夹，创建集成测试文件，可以在这里调用src 中lib文件中的单元测试函数，然后在控制台中执行cargo test，会先挨个进行单元测试，再进行集成测试，如果只需要执行集成测试，则在cargo test后加上—test 集成文件名，因为cargo 会将tests目录下的每一个文件都识别为一个crate，也可以通过cargo test 函数名来执行争对lib文件中某一个函数的单元测试，如果不同的单元测试中有一些共同的操作，可以将这些操作封装成函数，在tests目录下再新建子目录，在其中新建mod.rs文件，将函数封装在此处，因为直接在tests中新建文件的话也会被识别为测试文件</p>
@@ -111,7 +111,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/31/rust23/" data-id="cm2yv4hkr00002suyakob2tf2" data-title="rust 学习笔记二十二 Rust测试" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="https://liucanzhu.github.io/2024/10/31/rust23/" data-id="cm2yv4hkr00002suyakob2tf2" data-title="rust 学习笔记二十三 Rust测试" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -972,7 +972,7 @@
       <ul>
         
           <li>
-            <a href="/2024/10/31/rust23/">rust 学习笔记二十二 Rust测试</a>
+            <a href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
           </li>
         
           <li>
