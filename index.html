@@ -69,6 +69,109 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust24" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/11/03/rust24/" class="article-date">
+  <time class="dt-published" datetime="2024-11-03T11:06:36.056Z" itemprop="datePublished">2024-11-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）先明确以下概念"><a href="#（一）先明确以下概念" class="headerlink" title="（一）先明确以下概念"></a>（一）先明确以下概念</h3><h4 id="1-并发与并行的区别："><a href="#1-并发与并行的区别：" class="headerlink" title="1.并发与并行的区别："></a>1.并发与并行的区别：</h4><p>并发(Concurrency):多个任务在时间上<strong>交替执行</strong></p>
+<p>并行(Parallelism):多个任务<strong>同时执行</strong></p>
+<h4 id="2-进程与线程"><a href="#2-进程与线程" class="headerlink" title="2.进程与线程"></a>2.进程与线程</h4><p>在大部分OS里,代码运行在进程(process)中,OS同时管理多个进程；</p>
+<p>在你的程序里,各独立部分可以同时运行,运行这些独立部分的就是线程(thread)</p>
+<h4 id="3-多线程运行"><a href="#3-多线程运行" class="headerlink" title="3.多线程运行"></a>3.多线程运行</h4><p>好处：提升性能表现</p>
+<p>坏处：增加复杂性:无法保障各线程的执行顺序</p>
+<p>多线程可导致的问题：竞争状态,线程死锁,两个线程彼此等待对方使用完所持有的资源,线程无法继续；只在某些情况下发生的Bug,很难可靠地复制现象和修复</p>
+<h4 id="4-实现线程的方式"><a href="#4-实现线程的方式" class="headerlink" title="4.实现线程的方式"></a>4.实现线程的方式</h4><p>通过调用OS的API来创建线程:1:1模型,需要较小的运行时</p>
+<p>语言自己实现的线程(绿色线程):M:N模型,需要更大的运行时</p>
+<p>Rust:需要权衡运行时的支持</p>
+<p>Rust标准库仅提供1:1模型的线程</p>
+<h3 id="（二）Rust如何创建线程"><a href="#（二）Rust如何创建线程" class="headerlink" title="（二）Rust如何创建线程"></a>（二）Rust如何创建线程</h3><h4 id="1-创建新线程"><a href="#1-创建新线程" class="headerlink" title="1.创建新线程"></a>1.创建新线程</h4><p>通过 thread::spawn 函数可以创建新线程。参数:一个闭包(在新线程里运行的代码)</p>
+<p><img src="/../assets/img/24-1.jpg" alt="图24-1" title="24-1"></p>
+<p>由上面执行结果可以看出：</p>
+<p>位于主线程和副线程的代码循环交替执行，且在主线程执行完之后，副线程虽然没有执行完，但是也很快结束了，如果希望在主线程执行完后，可以继续执行完副线程，可以</p>
+<h4 id="2-通过join-Handle来等待所有线程完成"><a href="#2-通过join-Handle来等待所有线程完成" class="headerlink" title="2.通过join Handle来等待所有线程完成"></a>2.通过join Handle来等待所有线程完成</h4><p>thread::spawn函数的返回值类型是Join Handle，Join Handle持有值的所有权，调用其join方法,可以等待对应的其它线程的完成</p>
+<p>join方法:调用handle的join方法会阻止当前运行线程的执行,直到handle所表示的这些线程终结。</p>
+<p><img src="/../assets/img/24-2.jpg" alt="图24-2" title="24-2"></p>
+<p>注：如果将handle.join().unwrap();副线程执行的代码写在了主线程执行之前，那么将会在副线程执行完之后再执行主线程，无法达到解决时间的效果</p>
+<h4 id="3-使用move闭包"><a href="#3-使用move闭包" class="headerlink" title="3.使用move闭包"></a>3.使用move闭包</h4><p>move闭包通常和thread::spawn函数一起使用,它允许你使用其它线程的数据,创建线程时,把值的所有权从一个线程转移到另一个线程</p>
+<p>如下所示：</p>
+<p><img src="/../assets/img/24-3.jpg" alt="图24-3" title="24-3"></p>
+<p>当闭包借用外界变量v时，提示：closure may outlive the current function, but it borrows <code>v</code>, which is owned by the current function<br>may outlive borrowed value <code>v</code>，为了确保外界变量的存活时间和闭包一样，需使用move:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">let v = vec![1,2,3];</span><br><span class="line">let handle = thread::spawn(move ||&#123;</span><br><span class="line">    println!(&quot;here is a vector:&#123;:?&#125;&quot;,v);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="（三）多线程通信"><a href="#（三）多线程通信" class="headerlink" title="（三）多线程通信"></a>（三）多线程通信</h3><h4 id="1-消息传递"><a href="#1-消息传递" class="headerlink" title="1.消息传递"></a>1.消息传递</h4><p>一种很流行且能保证安全并发的技术就是:消息传递。线程(或Actor)通过彼此发送消息(数据)来进行通信</p>
+<p>Go语言的名言:不要用共享内存来通信,要用通信来共享内存。</p>
+<p>Rust:Channel(标准库提供)</p>
+<h4 id="2-Channel"><a href="#2-Channel" class="headerlink" title="2.Channel"></a>2.Channel</h4><p>Channel包含:发送端、接收端</p>
+<p>调用发送端的方法,发送数据</p>
+<p>接收端会检查和接收到达的数据</p>
+<p>如果发送端、接收端中任意一端被丢弃了,那么Channel就”关闭”了</p>
+<h4 id="3-创建channel"><a href="#3-创建channel" class="headerlink" title="3.创建channel"></a>3.创建channel</h4><p>使用mpsc::channel函数来创建Channel，mpsc表示multiple producer,single，consumer(多个生产者、一个消费者)</p>
+<p>返回一个tuple(元组):里面元素分别是发送端、接收端</p>
+<p>使用mpsc::sync_channel来创建带缓冲区的channel</p>
+<p>入参为缓冲区大小,当缓冲区塞满时进行阻塞</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">use std::thread;</span><br><span class="line">use std::time::Duration;</span><br><span class="line">use std::sync::mpsc;</span><br><span class="line"></span><br><span class="line">fn main()&#123; </span><br><span class="line">    thread_study();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn thread_study () &#123;</span><br><span class="line">    let (tx, rx) = mpsc::channel();</span><br><span class="line">    let tx1 = mpsc::Sender::clone(&amp;tx);</span><br><span class="line">    </span><br><span class="line">    thread::spawn(move || &#123;</span><br><span class="line">        let vals = vec![</span><br><span class="line">            String::from(&quot;hi&quot;),</span><br><span class="line">            String::from(&quot;from&quot;),</span><br><span class="line">            String::from(&quot;the&quot;),</span><br><span class="line">            String::from(&quot;thread&quot;),</span><br><span class="line">        ];</span><br><span class="line">        for val in vals &#123;</span><br><span class="line">            tx.send(val).unwrap();</span><br><span class="line">            thread::sleep(Duration::from_millis(1));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    thread::spawn(move || &#123;</span><br><span class="line">        let vals = vec![</span><br><span class="line">            String::from(&quot;hi&quot;),</span><br><span class="line">            String::from(&quot;from&quot;),</span><br><span class="line">            String::from(&quot;the&quot;),</span><br><span class="line">            String::from(&quot;thread&quot;),</span><br><span class="line">        ];</span><br><span class="line">        for val in vals &#123;</span><br><span class="line">            tx1.send(val).unwrap();</span><br><span class="line">            thread::sleep(Duration::from_millis(1));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    for received in rx &#123;</span><br><span class="line">        println!(&quot;Got :&#123;&#125;&quot;,received);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h4><h5 id="发送端的方法"><a href="#发送端的方法" class="headerlink" title="发送端的方法"></a>发送端的方法</h5><p>send:</p>
+<p>参数:想要发送的数据</p>
+<p>返回:Result&lt;T,E&gt;，如果有问题(例如接收端已经被丢弃),就返回一个错误</p>
+<h5 id="接收端的方法"><a href="#接收端的方法" class="headerlink" title="接收端的方法"></a>接收端的方法</h5><p>recv方法:</p>
+<p><strong>阻止当前线程执行</strong>,直到Channel中有值被送来</p>
+<p>·	 一旦有值收到,就返回Result&lt;T,E&gt;</p>
+<p>·	 当发送端关闭,就会收到一个错误</p>
+<p><img src="/../assets/img/24-4.jpg" alt="图24-4" title="24-4"></p>
+<p>如图所示：虽然发送线程中设置了一秒钟的延时，但是接受线程中在第一次接受到内容并打印后，也在继续等待直到接收到下一个信息</p>
+<p>try_recv方法:</p>
+<p><strong>不会阻塞</strong></p>
+<p>·   立即返回Result&lt;T,E&gt;:</p>
+<p>·	有数据达到:返回Ok,里面包含着数据</p>
+<p>·	否则,返回错误</p>
+<p>·   通常会使用循环调用来检查try_recv的结果</p>
+<p><img src="/../assets/img/24-5.jpg" alt="图24-5" title="24-5"></p>
+<p>如图所示：使用loop循环来进行监听，而如果此处不进行循环，在执行一次 try_recv 操作后就会结束</p>
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><h4 id="1-单主线程多工作线程实现线程池处理文件"><a href="#1-单主线程多工作线程实现线程池处理文件" class="headerlink" title="1. 单主线程多工作线程实现线程池处理文件"></a>1. 单主线程多工作线程实现线程池处理文件</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">use std::thread;</span><br><span class="line"></span><br><span class="line">use crossbeam_channel::&#123;unbounded, Receiver, Sender&#125;;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line"></span><br><span class="line">    let file_paths = vec![</span><br><span class="line">        &quot;file1.txt&quot;, &quot;file2.txt&quot;, &quot;file3.txt&quot;, &quot;file4.txt&quot;,</span><br><span class="line">        &quot;file5.txt&quot;, &quot;file6.txt&quot;, &quot;file7.txt&quot;, &quot;file8.txt&quot;,</span><br><span class="line">        &quot;file9.txt&quot;, &quot;file10.txt&quot;,</span><br><span class="line">        &quot;file11.txt&quot;, &quot;file12.txt&quot;, &quot;file13.txt&quot;, &quot;file14.txt&quot;,</span><br><span class="line">        &quot;file15.txt&quot;, &quot;file16.txt&quot;, &quot;file17.txt&quot;, &quot;file18.txt&quot;,</span><br><span class="line">        &quot;file19.txt&quot;, &quot;file20.txt&quot;,</span><br><span class="line">    ];</span><br><span class="line">    // 创建一个可以被多个消费者共享的通道</span><br><span class="line">    let (tx, rx) = unbounded();</span><br><span class="line"></span><br><span class="line">    // 创建一个向通道发送任务的生产者线程</span><br><span class="line">    let producer_handle = std::thread::spawn(move || &#123;</span><br><span class="line">        for i in 0..10&#123;</span><br><span class="line">            tx.send(file_paths[i]).unwrap();</span><br><span class="line">            // std::thread::sleep(std::time::Duration::from_millis(100));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // 创建多个消费者线程</span><br><span class="line">    let num_consumers = 4;</span><br><span class="line"></span><br><span class="line">    let consumer_handles = (0..num_consumers).map(|i| &#123;</span><br><span class="line">        let rx = rx.clone(); // `crossbeam-channel` 的 Receiver 可以被克隆</span><br><span class="line">        thread::spawn(move || &#123;</span><br><span class="line">            while let Ok(task) = rx.recv() &#123;</span><br><span class="line">                println!(&quot;Consumer processed task: &#123;&#125;, &#123;&#125;&quot;, task, i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;).collect::&lt;Vec&lt;_&gt;&gt;();</span><br><span class="line"></span><br><span class="line">    // 等待生产者线程结束</span><br><span class="line">    producer_handle.join().unwrap();</span><br><span class="line"></span><br><span class="line">    // 等待所有消费者线程结束</span><br><span class="line">    for handle in consumer_handles &#123;</span><br><span class="line">        handle.join().unwrap();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/11/03/rust24/" data-id="cm31qkqgp000058uy2rtsa7vx" data-title="rust 学习笔记二十四 Rust的并发" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust23" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/10/31/rust23/" class="article-date">
@@ -812,130 +915,6 @@
 
 
   
-    <article id="post-rust14" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/28/rust14/" class="article-date">
-  <time class="dt-published" datetime="2024-09-27T19:35:47.737Z" itemprop="datePublished">2024-09-28</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/28/rust14/">rust 学习笔记十四 Rust 的返回值与错误处理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="（一）Option返回值"><a href="#（一）Option返回值" class="headerlink" title="（一）	Option返回值"></a>（一）	Option返回值</h3><h4 id="1-解构Option"><a href="#1-解构Option" class="headerlink" title="1. 解构Option"></a>1. 解构Option</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">enum Option&lt;T&gt;&#123;</span><br><span class="line">    Some(T)</span><br><span class="line">    None,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>简单解释就是:一个变量要么有值:Some(T),要么为空:None</p>
-<p>在之前的文章中出现过这样的例子：</p>
-<p><img src="/../assets/img/14-1.jpg" alt="图14-1" title="14-1"></p>
-<h4 id="2-辅助函数"><a href="#2-辅助函数" class="headerlink" title="2. 辅助函数"></a>2. 辅助函数</h4><p>但是match也有弊端，代码**较为冗杂，当嵌套较深时，不够优雅，因此，option提供了一系列辅助函数</p>
-<p>下面举例几个常用的进行说明：</p>
-<p>a. unwrap</p>
-<p><img src="/../assets/img/14-2.jpg" alt="图14-2" title="14-2"></p>
-<p>可见，unwrap可以直接跳过match，得到Some包裹的实际值，但是<strong>如果此时待解构的值是None,直接调用unwrap会发生panic</strong></p>
-<p>b. is_some is_none</p>
-<p>可以使用is_some和is_none方法来判断Option中是否存在值</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="built_in">let</span> v=[10,40,30];</span><br><span class="line">    ifv.get(1).<span class="function"><span class="title">is_some</span></span>()&#123;</span><br><span class="line">        println!(<span class="string">&quot;&#123;&#125;&quot;</span>,v[1]);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>使用is_none 和 is_some好处是<strong>可以在none值时不panic</strong></p>
-<p>c. unwrap_or</p>
-<p>如果既需要在报错时候不panic, 也希望能直接拿到值，可以使用unwrap_or方法：</p>
-<p><img src="/../assets/img/14-3.jpg" alt="图14-3" title="14-3"></p>
-<p>由此可见，<strong>不仅可以取值，还可以在值无效时设置默认值</strong></p>
-<h3 id="（二）错误处理"><a href="#（二）错误处理" class="headerlink" title="（二）	错误处理"></a>（二）	错误处理</h3><p>Rust中的错误主要分为两类:</p>
-<p><strong>可恢复错误</strong>: 通常用于从系统全局角度来看可以接受的错误,例如:处理用户的访问、操作等错误,这些错误只会影响某个用户自身的操作进程,而不会对系统的全局稳定性产生影响</p>
-<p><strong>不可恢复错误</strong>: 刚好相反,该错误通常是全局性或者系统性的错误,例如数组越界访问,系统启动时发生了影响启动流程的错误等等,这些错误的影响往往对于系统来说是致命的</p>
-<h4 id="1-Result用于可恢复错误"><a href="#1-Result用于可恢复错误" class="headerlink" title="1. Result&lt;T,E&gt;用于可恢复错误"></a>1. Result&lt;T,E&gt;用于可恢复错误</h4><p>大部分错误并没有严重到需要程序完全停止执行。有时候,一个函数失败,仅仅就是因为一个容易理解和响应的原因, 例如,如果因为打开一个并不存在的文件而失败,此时我们可能想要创建这个文件,而不是终止进程。</p>
-<p>泛型参数T代表成功时存入的正确值的类型,存放方式是OK(T)</p>
-<p>E代表错误时存入的错误值,存放方式是Err(E)</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">enum Result&lt;T,E&gt; &#123;</span><br><span class="line">Ok(T),</span><br><span class="line">Err(E),</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">enum MathError&#123;</span><br><span class="line">    DivisionByZero,</span><br><span class="line">    NegativeSquareRoot,</span><br><span class="line">&#125;</span><br><span class="line">fn div(a:i32, b: i32) -&gt; Result&lt;f64,MathError&gt;&#123;</span><br><span class="line">    <span class="keyword">if</span> b!=0&#123;</span><br><span class="line">    Ok(a as f64 / b as f64)</span><br><span class="line">    &#125; <span class="keyword">else</span>&#123;</span><br><span class="line">    Err(MathError::DivisionByZero)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn sqrt(a:f64) -&gt;Result&lt;f64,MathError&gt;&#123;</span><br><span class="line">    <span class="keyword">if</span> a &lt;0.0&#123;</span><br><span class="line">        Err(MathError::NegativeSquareRoot)</span><br><span class="line">    &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        Ok(a.sqrt())</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>处理result：</p>
-<p>基础示例：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">use std::fs::File;</span><br><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line"></span><br><span class="line"><span class="built_in">let</span> f=File::open(<span class="string">&quot;hello.txt&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">let</span> f=match f&#123;</span><br><span class="line">    Ok(file)=&gt;file,</span><br><span class="line">    Err(error)=&gt;&#123;</span><br><span class="line">        panic!(<span class="string">&quot;Problem opening the file:&#123;:?&#125;&quot;</span>,error)</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>对返回的错误进行处理, 我们希望对不同的错误原因采取不同的行为:</p>
-<p>如果File::open因为文件不存在而失败,我们希望创建这个文件并返回新文件的句柄</p>
-<p>如果File::open因为任何其他原因失败,例如没有打开文件的权限,我们仍然panic!</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">use std::fs::File;</span><br><span class="line">use std::io::ErrorKind;</span><br><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="built_in">let</span> greeting_file_result=File::open(<span class="string">&quot;hello.txt&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> greeting_file=match greeting_file_result &#123;</span><br><span class="line">        Ok(file)=&gt;file,</span><br><span class="line">        Err(error)=&gt;match error.<span class="function"><span class="title">kind</span></span>()&#123;</span><br><span class="line">            ErrorKind::NotFound =&gt; match File::create(<span class="string">&quot;hello.txt&quot;</span>)&#123;</span><br><span class="line">                Ok(<span class="built_in">fc</span>)=&gt;<span class="built_in">fc</span>,</span><br><span class="line">                Err(e)=&gt;panic!(<span class="string">&quot;Problem creating the file:&#123;e:?&#125;&quot;</span>),</span><br><span class="line">            &#125;,</span><br><span class="line">            other_error=&gt;&#123;</span><br><span class="line">                panic!(<span class="string">&quot;Problem opening the file:&#123;other_error:?&#125;&quot;</span>)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-Result的辅助方法"><a href="#2-Result的辅助方法" class="headerlink" title="2.Result&lt;T,E&gt;的辅助方法"></a>2.Result&lt;T,E&gt;的辅助方法</h4><p>match能够胜任它的工作,不过它可能有点冗长并且不总是能很好的的表明其意图。Result&lt;T,E&gt;类型定义了很多辅助方法来处理各种情况</p>
-<p>a. unwrap</p>
-<p>其中之一叫做 unwrap,它的实现就类似于示例9-4中的match语问,如果 Result值是成员0k,unwrap会返回 0k 中的值,如果Result是成员Err,unwrap会为我们调用 panic!</p>
-<p><img src="/../assets/img/14-5.jpg" alt="图14-5" title="14-5"></p>
-<p>b. unwrap_or</p>
-<p>同时也支持使用unwrap_or设置失败之后的默认值</p>
-<p>c. expect</p>
-<p>expect跟unwrap 很像,也是遇到错误直接 panic,但是会带上自定义的错误提示信息,相当于重载了错误打印的函数:</p>
-<p><img src="/../assets/img/14-6.jpg" alt="图14-6" title="14-6"></p>
-<p>d. map</p>
-<p><code>Result&lt;T, E&gt; -&gt; Result&lt;U, E&gt;</code></p>
-<p><img src="/../assets/img/14-7.jpg" alt="图14-7" title="14-7"></p>
-<p>e. map_err</p>
-<p><code>Result&lt;T,E&gt; -&gt; Result&lt;T,F&gt;</code>, 对错误类型进行转换</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">use std::fs::File;</span><br><span class="line"></span><br><span class="line">fn x() -&gt;Result&lt;(),String&gt;&#123;</span><br><span class="line">    <span class="built_in">let</span> f = File::open(<span class="string">&quot;hello.txt&quot;</span>).map_err(|e: std:: io::Error| -&gt;String&#123;format!(<span class="string">&quot;&#123;e&#125;&quot;</span>)&#125;);</span><br><span class="line">    match f&#123;</span><br><span class="line">        Err(e)=&gt;Err(e),</span><br><span class="line">        Ok(_)=&gt;&#123;</span><br><span class="line">            Ok(())</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其实上述的代码在Err(e)的时候再将e的类型转换为String也可以，但是当遇到下面这种情况的时候：</p>
-<p>传播错误</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">fn read_username_from_file() -&gt;Result&lt;String, io::Error&gt;&#123;</span><br><span class="line">    //打开文件,f是`Result&lt;文件句柄,io::Error&gt;</span><br><span class="line">    <span class="built_in">let</span> f=File::open(<span class="string">&quot;hello.txt&quot;</span>);</span><br><span class="line">    <span class="built_in">let</span> mut f=match f&#123;</span><br><span class="line">    //打开文件成功,将file句柄赋值给f</span><br><span class="line">    Ok(file)=&gt;file,</span><br><span class="line">    //打开文件失败,将错误返回(向上传播)</span><br><span class="line">    Err(e)=&gt;<span class="built_in">return</span> Err(e),</span><br><span class="line">    &#125;;</span><br><span class="line">    //创建动态字符串s</span><br><span class="line">    <span class="built_in">let</span> mut s=String::new();</span><br><span class="line">    //从f文件句柄读取数据并写入s中</span><br><span class="line">    match f.read_to_string(&amp;mut s)&#123;</span><br><span class="line">    //读取成功,返回0k封装的字符串</span><br><span class="line">    Ok(_)=&gt;Ok(s),</span><br><span class="line">    //将错误向上传播</span><br><span class="line">    Err(e)=&gt;Err(e),</span><br><span class="line">&#125;&#125;</span><br></pre></td></tr></table></figure>
-
-<p>整个打开文件再进行读取的过程需要非常多的match，因此可以<strong>使用传播错误的简写?运算符</strong></p>
-<p>对于Result, 如果结果是<strong>Ok(T),则把T赋值给f, 如果结果是Err(E),则返回该错误</strong></p>
-<p>对于Option, 如果值是Some,<strong>Some中的值作为表达式的返回值同时函数继续, 如果值是None,此时None会从函数中提前返回</strong></p>
-<p>所以?特别适合用来传播错误</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fn c() -&gt; Result&lt;String, io::Error&gt; &#123;</span><br><span class="line">    <span class="built_in">let</span> mut f: File=File::open(<span class="string">&quot;hello.txt&quot;</span>)?;</span><br><span class="line">    <span class="built_in">let</span> mut s=String::new();</span><br><span class="line">    f.read_to_string(&amp;mut s)?;</span><br><span class="line">    Ok(s)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这种方法会使得代码简洁很多,但是当返回值改为Result&lt;String, String&gt;的时候，将不再适用，此时需要用到map_err,来对error进行类型转换</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">File::open(<span class="string">&quot;hello.txt&quot;</span>).map_err(|e| format!(<span class="string">&quot;&#123;e&#125;&quot;</span>))?</span><br><span class="line">read_to_string(&amp;mut s).map_err(|e| format!(<span class="string">&quot;&#123;e&#125;&quot;</span>))?</span><br><span class="line">Ok(s)</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-Option与-result的相互转化"><a href="#3-Option与-result的相互转化" class="headerlink" title="3. Option与 result的相互转化"></a>3. Option与 result的相互转化</h4><p>a. Option-&gt;Result: ok_or<br>Some(v) 转为 Ok(v)<br>None 转为 Err(err)</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn first(arr: &amp;[i32]) -&gt; Result&lt;&amp;i32, &amp;str&gt; &#123;</span><br><span class="line">    arr.get(0).ok_or(<span class="string">&quot;out of index&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>b. Result-&gt;Option: err<br>Err(e) 转为 Some(e)<br>Ok(v) 转为 None</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    <span class="built_in">let</span> f=File::open(<span class="string">&quot;hello.txt&quot;</span>).err();</span><br><span class="line">    <span class="keyword">if</span> f.<span class="function"><span class="title">is_some</span></span>()&#123;</span><br><span class="line">        println!(<span class="string">&quot;no file&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="4-panic-用于不可恢复错误"><a href="#4-panic-用于不可恢复错误" class="headerlink" title="4. panic!用于不可恢复错误"></a>4. panic!用于不可恢复错误</h4><p>a. 被动触发：</p>
-<p>C语言中,尝试读取数据结构之后的值是未定义行为(undefined behavior)。你会得到任何对应数据结构中这个元素的内存位置的值,甚至是这些内存并不属于这个数据结构的情况。这被称为缓冲区溢出(buffer overread),并可能会导致安全漏洞,比如攻击者<br>可以像这样操作索引来读取储存在数据结构之后不被允许的数据。为了保护程序远离这类漏洞,如果尝试读取一个索引不存在的元素,Rust会停止执行并拒绝继续。尝试运行上面的程序会出现如下</p>
-<p><img src="/../assets/img/14-4.jpg" alt="图14-4" title="14-4"></p>
-<p>b. 主动调用：</p>
-<p>对此,Rust为我们提供了panic!宏,当调用执行该宏时,程序会打印印出一个错误信息,展开报错点往前的函数调用堆栈,最后退出程序。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn <span class="function"><span class="title">main</span></span>()&#123;</span><br><span class="line">    panic!(<span class="string">&quot;crash and burn&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>panic时的两种终止方式</p>
-<p>栈展开(unwinding)(默认):Rust会回溯栈上数据和函数调用,因此也意味着更多的善后工作,好处是可以给出充分的报错信息和栈调用信息,便于事后的问题复盘, 直接终止(abort):不清理数据就直接退出程序,善后工作交与操作系统来负责</p>
-<p>对于绝大多数用户,使用默认选择是最好的,但是当你关心最终编译出的二进制可执行文件大小时,那么可以尝试夫使用直接终止的防式,例如下面的配置修改Cargo.toml文件,实现在 release模式下遇到panic直接终止</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[profile.release]</span><br><span class="line">panic=<span class="string">&#x27;abort&#x27;</span></span><br></pre></td></tr></table></figure>
-
-<p>然后在控制台执行 <code>RUST_BACKTRACE=1 cargo run –release</code></p>
-<p><strong>Windows用户需要先在控制台执行 $Env:RUST_BACKTRACE&#x3D;1，再执行cargo run</strong></p>
-<h3 id="实践："><a href="#实践：" class="headerlink" title="实践："></a>实践：</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let a = 4;</span><br><span class="line">    let b = Some(1); // 假设 b 是 None</span><br><span class="line">    match call(a, b.unwrap_or(1)) &#123;</span><br><span class="line">        Ok(result) =&gt; println!(&quot;Result: &#123;&#125;&quot;, result),</span><br><span class="line">        Err(e) =&gt; println!(&quot;Error: &#123;&#125;&quot;, e),</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn call(a: i32,b:i32) -&gt; Result&lt;f64,String&gt;&#123;</span><br><span class="line">    let r = divide(a, b);</span><br><span class="line">    let s = match r &#123;</span><br><span class="line">        Some(value) =&gt; sqrt(value),</span><br><span class="line">        None =&gt; return Err(&quot;Division by zero&quot;.to_string()),</span><br><span class="line">    &#125;;</span><br><span class="line">    s.map_err(|e| match e &#123;</span><br><span class="line">        MathError::DivisionByZero =&gt; &quot;Division by zero&quot;.to_string(),</span><br><span class="line">        MathError::NegativeSquareRoot =&gt; &quot;Negative square root&quot;.to_string(),</span><br><span class="line">    &#125;)</span><br><span class="line">&#125;</span><br><span class="line">fn divide(a:i32,b:i32)-&gt;Option&lt;f64&gt;&#123;</span><br><span class="line">    if b!=0&#123;</span><br><span class="line">        Some(a as f64/b as f64)</span><br><span class="line">    &#125;else&#123;</span><br><span class="line">        None</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pub enum MathError&#123;</span><br><span class="line">    DivisionByZero,</span><br><span class="line">    NegativeSquareRoot,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn sqrt(x:f64) -&gt;Result&lt;f64,MathError&gt;&#123;</span><br><span class="line">    if x&lt;0.0 &#123;</span><br><span class="line">        Err(MathError::NegativeSquareRoot)</span><br><span class="line">    &#125;else&#123;</span><br><span class="line">        Ok(x.sqrt())</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/28/rust14/" data-id="cm1l4o57u0000k4uy82xz2co1" data-title="rust 学习笔记十四 Rust 的返回值与错误处理" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -959,7 +938,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
     </div>
   </div>
 
@@ -970,6 +949,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
+          </li>
         
           <li>
             <a href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
@@ -985,10 +968,6 @@
         
           <li>
             <a href="/2024/10/26/rust20/">rust 学习笔记二十 Rust中的宏</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/22/rust19/">rust 学习笔记十九 Rust中的trait</a>
           </li>
         
       </ul>

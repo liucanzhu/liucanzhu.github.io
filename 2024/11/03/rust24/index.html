@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>rust 学习笔记二十四 Rust的并发 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="（一）先明确以下概念1.并发与并行的区别：并发(Concurrency):多个任务在时间上交替执行 并行(Parallelism):多个任务同时执行 2.进程与线程在大部分OS里,代码运行在进程(process)中,OS同时管理多个进程； 在你的程序里,各独立部分可以同时运行,运行这些独立部分的就是线程(thread) 3.多线程运行好处：提升性能表现 坏处：增加复杂性:无法保障各线程的执行顺序">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rust 学习笔记二十四 Rust的并发">
+<meta property="og:url" content="https://liucanzhu.github.io/2024/11/03/rust24/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="（一）先明确以下概念1.并发与并行的区别：并发(Concurrency):多个任务在时间上交替执行 并行(Parallelism):多个任务同时执行 2.进程与线程在大部分OS里,代码运行在进程(process)中,OS同时管理多个进程； 在你的程序里,各独立部分可以同时运行,运行这些独立部分的就是线程(thread) 3.多线程运行好处：提升性能表现 坏处：增加复杂性:无法保障各线程的执行顺序">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/24-1.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/24-2.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/24-3.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/24-4.jpg">
+<meta property="og:image" content="https://liucanzhu.github.io/assets/img/24-5.jpg">
+<meta property="article:published_time" content="2024-11-03T11:06:36.056Z">
+<meta property="article:modified_time" content="2024-11-05T16:55:20.540Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liucanzhu.github.io/assets/img/24-1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-rust24" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/11/03/rust24/" class="article-date">
+  <time class="dt-published" datetime="2024-11-03T11:06:36.056Z" itemprop="datePublished">2024-11-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      rust 学习笔记二十四 Rust的并发
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）先明确以下概念"><a href="#（一）先明确以下概念" class="headerlink" title="（一）先明确以下概念"></a>（一）先明确以下概念</h3><h4 id="1-并发与并行的区别："><a href="#1-并发与并行的区别：" class="headerlink" title="1.并发与并行的区别："></a>1.并发与并行的区别：</h4><p>并发(Concurrency):多个任务在时间上<strong>交替执行</strong></p>
+<p>并行(Parallelism):多个任务<strong>同时执行</strong></p>
+<h4 id="2-进程与线程"><a href="#2-进程与线程" class="headerlink" title="2.进程与线程"></a>2.进程与线程</h4><p>在大部分OS里,代码运行在进程(process)中,OS同时管理多个进程；</p>
+<p>在你的程序里,各独立部分可以同时运行,运行这些独立部分的就是线程(thread)</p>
+<h4 id="3-多线程运行"><a href="#3-多线程运行" class="headerlink" title="3.多线程运行"></a>3.多线程运行</h4><p>好处：提升性能表现</p>
+<p>坏处：增加复杂性:无法保障各线程的执行顺序</p>
+<p>多线程可导致的问题：竞争状态,线程死锁,两个线程彼此等待对方使用完所持有的资源,线程无法继续；只在某些情况下发生的Bug,很难可靠地复制现象和修复</p>
+<h4 id="4-实现线程的方式"><a href="#4-实现线程的方式" class="headerlink" title="4.实现线程的方式"></a>4.实现线程的方式</h4><p>通过调用OS的API来创建线程:1:1模型,需要较小的运行时</p>
+<p>语言自己实现的线程(绿色线程):M:N模型,需要更大的运行时</p>
+<p>Rust:需要权衡运行时的支持</p>
+<p>Rust标准库仅提供1:1模型的线程</p>
+<h3 id="（二）Rust如何创建线程"><a href="#（二）Rust如何创建线程" class="headerlink" title="（二）Rust如何创建线程"></a>（二）Rust如何创建线程</h3><h4 id="1-创建新线程"><a href="#1-创建新线程" class="headerlink" title="1.创建新线程"></a>1.创建新线程</h4><p>通过 thread::spawn 函数可以创建新线程。参数:一个闭包(在新线程里运行的代码)</p>
+<p><img src="/../assets/img/24-1.jpg" alt="图24-1" title="24-1"></p>
+<p>由上面执行结果可以看出：</p>
+<p>位于主线程和副线程的代码循环交替执行，且在主线程执行完之后，副线程虽然没有执行完，但是也很快结束了，如果希望在主线程执行完后，可以继续执行完副线程，可以</p>
+<h4 id="2-通过join-Handle来等待所有线程完成"><a href="#2-通过join-Handle来等待所有线程完成" class="headerlink" title="2.通过join Handle来等待所有线程完成"></a>2.通过join Handle来等待所有线程完成</h4><p>thread::spawn函数的返回值类型是Join Handle，Join Handle持有值的所有权，调用其join方法,可以等待对应的其它线程的完成</p>
+<p>join方法:调用handle的join方法会阻止当前运行线程的执行,直到handle所表示的这些线程终结。</p>
+<p><img src="/../assets/img/24-2.jpg" alt="图24-2" title="24-2"></p>
+<p>注：如果将handle.join().unwrap();副线程执行的代码写在了主线程执行之前，那么将会在副线程执行完之后再执行主线程，无法达到解决时间的效果</p>
+<h4 id="3-使用move闭包"><a href="#3-使用move闭包" class="headerlink" title="3.使用move闭包"></a>3.使用move闭包</h4><p>move闭包通常和thread::spawn函数一起使用,它允许你使用其它线程的数据,创建线程时,把值的所有权从一个线程转移到另一个线程</p>
+<p>如下所示：</p>
+<p><img src="/../assets/img/24-3.jpg" alt="图24-3" title="24-3"></p>
+<p>当闭包借用外界变量v时，提示：closure may outlive the current function, but it borrows <code>v</code>, which is owned by the current function<br>may outlive borrowed value <code>v</code>，为了确保外界变量的存活时间和闭包一样，需使用move:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">let v = vec![1,2,3];</span><br><span class="line">let handle = thread::spawn(move ||&#123;</span><br><span class="line">    println!(&quot;here is a vector:&#123;:?&#125;&quot;,v);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="（三）多线程通信"><a href="#（三）多线程通信" class="headerlink" title="（三）多线程通信"></a>（三）多线程通信</h3><h4 id="1-消息传递"><a href="#1-消息传递" class="headerlink" title="1.消息传递"></a>1.消息传递</h4><p>一种很流行且能保证安全并发的技术就是:消息传递。线程(或Actor)通过彼此发送消息(数据)来进行通信</p>
+<p>Go语言的名言:不要用共享内存来通信,要用通信来共享内存。</p>
+<p>Rust:Channel(标准库提供)</p>
+<h4 id="2-Channel"><a href="#2-Channel" class="headerlink" title="2.Channel"></a>2.Channel</h4><p>Channel包含:发送端、接收端</p>
+<p>调用发送端的方法,发送数据</p>
+<p>接收端会检查和接收到达的数据</p>
+<p>如果发送端、接收端中任意一端被丢弃了,那么Channel就”关闭”了</p>
+<h4 id="3-创建channel"><a href="#3-创建channel" class="headerlink" title="3.创建channel"></a>3.创建channel</h4><p>使用mpsc::channel函数来创建Channel，mpsc表示multiple producer,single，consumer(多个生产者、一个消费者)</p>
+<p>返回一个tuple(元组):里面元素分别是发送端、接收端</p>
+<p>使用mpsc::sync_channel来创建带缓冲区的channel</p>
+<p>入参为缓冲区大小,当缓冲区塞满时进行阻塞</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">use std::thread;</span><br><span class="line">use std::time::Duration;</span><br><span class="line">use std::sync::mpsc;</span><br><span class="line"></span><br><span class="line">fn main()&#123; </span><br><span class="line">    thread_study();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn thread_study () &#123;</span><br><span class="line">    let (tx, rx) = mpsc::channel();</span><br><span class="line">    let tx1 = mpsc::Sender::clone(&amp;tx);</span><br><span class="line">    </span><br><span class="line">    thread::spawn(move || &#123;</span><br><span class="line">        let vals = vec![</span><br><span class="line">            String::from(&quot;hi&quot;),</span><br><span class="line">            String::from(&quot;from&quot;),</span><br><span class="line">            String::from(&quot;the&quot;),</span><br><span class="line">            String::from(&quot;thread&quot;),</span><br><span class="line">        ];</span><br><span class="line">        for val in vals &#123;</span><br><span class="line">            tx.send(val).unwrap();</span><br><span class="line">            thread::sleep(Duration::from_millis(1));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    thread::spawn(move || &#123;</span><br><span class="line">        let vals = vec![</span><br><span class="line">            String::from(&quot;hi&quot;),</span><br><span class="line">            String::from(&quot;from&quot;),</span><br><span class="line">            String::from(&quot;the&quot;),</span><br><span class="line">            String::from(&quot;thread&quot;),</span><br><span class="line">        ];</span><br><span class="line">        for val in vals &#123;</span><br><span class="line">            tx1.send(val).unwrap();</span><br><span class="line">            thread::sleep(Duration::from_millis(1));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    for received in rx &#123;</span><br><span class="line">        println!(&quot;Got :&#123;&#125;&quot;,received);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-总结"><a href="#4-总结" class="headerlink" title="4.总结"></a>4.总结</h4><h5 id="发送端的方法"><a href="#发送端的方法" class="headerlink" title="发送端的方法"></a>发送端的方法</h5><p>send:</p>
+<p>参数:想要发送的数据</p>
+<p>返回:Result&lt;T,E&gt;，如果有问题(例如接收端已经被丢弃),就返回一个错误</p>
+<h5 id="接收端的方法"><a href="#接收端的方法" class="headerlink" title="接收端的方法"></a>接收端的方法</h5><p>recv方法:</p>
+<p><strong>阻止当前线程执行</strong>,直到Channel中有值被送来</p>
+<p>·	 一旦有值收到,就返回Result&lt;T,E&gt;</p>
+<p>·	 当发送端关闭,就会收到一个错误</p>
+<p><img src="/../assets/img/24-4.jpg" alt="图24-4" title="24-4"></p>
+<p>如图所示：虽然发送线程中设置了一秒钟的延时，但是接受线程中在第一次接受到内容并打印后，也在继续等待直到接收到下一个信息</p>
+<p>try_recv方法:</p>
+<p><strong>不会阻塞</strong></p>
+<p>·   立即返回Result&lt;T,E&gt;:</p>
+<p>·	有数据达到:返回Ok,里面包含着数据</p>
+<p>·	否则,返回错误</p>
+<p>·   通常会使用循环调用来检查try_recv的结果</p>
+<p><img src="/../assets/img/24-5.jpg" alt="图24-5" title="24-5"></p>
+<p>如图所示：使用loop循环来进行监听，而如果此处不进行循环，在执行一次 try_recv 操作后就会结束</p>
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><h4 id="1-单主线程多工作线程实现线程池处理文件"><a href="#1-单主线程多工作线程实现线程池处理文件" class="headerlink" title="1. 单主线程多工作线程实现线程池处理文件"></a>1. 单主线程多工作线程实现线程池处理文件</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">use std::thread;</span><br><span class="line"></span><br><span class="line">use crossbeam_channel::&#123;unbounded, Receiver, Sender&#125;;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line"></span><br><span class="line">    let file_paths = vec![</span><br><span class="line">        &quot;file1.txt&quot;, &quot;file2.txt&quot;, &quot;file3.txt&quot;, &quot;file4.txt&quot;,</span><br><span class="line">        &quot;file5.txt&quot;, &quot;file6.txt&quot;, &quot;file7.txt&quot;, &quot;file8.txt&quot;,</span><br><span class="line">        &quot;file9.txt&quot;, &quot;file10.txt&quot;,</span><br><span class="line">        &quot;file11.txt&quot;, &quot;file12.txt&quot;, &quot;file13.txt&quot;, &quot;file14.txt&quot;,</span><br><span class="line">        &quot;file15.txt&quot;, &quot;file16.txt&quot;, &quot;file17.txt&quot;, &quot;file18.txt&quot;,</span><br><span class="line">        &quot;file19.txt&quot;, &quot;file20.txt&quot;,</span><br><span class="line">    ];</span><br><span class="line">    // 创建一个可以被多个消费者共享的通道</span><br><span class="line">    let (tx, rx) = unbounded();</span><br><span class="line"></span><br><span class="line">    // 创建一个向通道发送任务的生产者线程</span><br><span class="line">    let producer_handle = std::thread::spawn(move || &#123;</span><br><span class="line">        for i in 0..10&#123;</span><br><span class="line">            tx.send(file_paths[i]).unwrap();</span><br><span class="line">            // std::thread::sleep(std::time::Duration::from_millis(100));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // 创建多个消费者线程</span><br><span class="line">    let num_consumers = 4;</span><br><span class="line"></span><br><span class="line">    let consumer_handles = (0..num_consumers).map(|i| &#123;</span><br><span class="line">        let rx = rx.clone(); // `crossbeam-channel` 的 Receiver 可以被克隆</span><br><span class="line">        thread::spawn(move || &#123;</span><br><span class="line">            while let Ok(task) = rx.recv() &#123;</span><br><span class="line">                println!(&quot;Consumer processed task: &#123;&#125;, &#123;&#125;&quot;, task, i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;).collect::&lt;Vec&lt;_&gt;&gt;();</span><br><span class="line"></span><br><span class="line">    // 等待生产者线程结束</span><br><span class="line">    producer_handle.join().unwrap();</span><br><span class="line"></span><br><span class="line">    // 等待所有消费者线程结束</span><br><span class="line">    for handle in consumer_handles &#123;</span><br><span class="line">        handle.join().unwrap();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/11/03/rust24/" data-id="cm31qkqgp000058uy2rtsa7vx" data-title="rust 学习笔记二十四 Rust的并发" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2024/10/31/rust23/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">rust 学习笔记二十三 Rust测试</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
+          </li>
+        
+          <li>
+            <a href="/2024/10/26/rust20/">rust 学习笔记二十 Rust中的宏</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
