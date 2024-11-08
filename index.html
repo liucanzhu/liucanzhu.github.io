@@ -69,6 +69,94 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust25" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/11/09/rust25/" class="article-date">
+  <time class="dt-published" datetime="2024-11-08T18:04:04.652Z" itemprop="datePublished">2024-11-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/11/09/rust25/">rust 学习笔记二十五 Rust中的共享内存</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Go语言的名言:不要用共享内存来通信,要用通信来共享内存</p>
+<p>Rust支持通过共享状态来实现并发</p>
+<p>Channel类似单所有权:一旦将值的所有权转移至Channel,就无法使用它了</p>
+<p>共享内存并发类似多所有权:多个线程可以同时访问同一内存</p>
+<h4 id="一-使用Mutex来每次只允许一个线程来访问数据"><a href="#一-使用Mutex来每次只允许一个线程来访问数据" class="headerlink" title="一.使用Mutex来每次只允许一个线程来访问数据"></a>一.使用Mutex来每次只允许一个线程来访问数据</h4><p>Mutex是mutualexclusion(互斥锁)的简写，在同一时刻,Mutex只允许一个线程来访问某些数据</p>
+<p>想要访问数据:</p>
+<ol>
+<li><p>线程必须首先获取互斥锁(lock)</p>
+</li>
+<li><p>lock数据结构是mutex的一部分,它能跟踪谁对数据拥</p>
+</li>
+<li><p>有独立访问权</p>
+</li>
+<li><p>mutex通常被描述为:通过锁定系统来保护它所持有的数据</p>
+</li>
+</ol>
+<h4 id="二-Mutex的两条规则"><a href="#二-Mutex的两条规则" class="headerlink" title="二.Mutex的两条规则"></a>二.Mutex的两条规则</h4><ol>
+<li><p>在使用数据之前,必须尝试获取锁(lock)。</p>
+</li>
+<li><p>使用完mutex所保护的数据,必须对数据进行解锁,以便其它线程可以获取锁。</p>
+</li>
+</ol>
+<h4 id="三-Mutex的API"><a href="#三-Mutex的API" class="headerlink" title="三.Mutex的API"></a>三.Mutex<T>的API</h4><p>通过Mutex::new(数据)来创建Mutex<T>, Mutex<T>是一个智能指针, 访问数据前,通过<code>lock</code>方法来获取锁,这会阻塞当前线程，lock可能会失败</p>
+<p>返回的是MutexGuard(智能指针,实现了Deref和Drop))</p>
+<p>如下所示：</p>
+<p><img src="/../assets/img/25-1.jpg" alt="图25-1" title="25-1"></p>
+<p>如果需要使用多个线程分别对上面的a值进行修改，在 创建线程进行修改后，对a值进行读取，不出所料，报错：</p>
+<p><img src="/../assets/img/25-2.jpg" alt="图25-2" title="25-2"></p>
+<p>根据以往的经验，使用Rc包裹变量可以通过引用计数，在修改变量后读取，但是报错显示：“Rx变量由于没实现Sent trait,无法在线程间共享“，</p>
+<p>于是我们可以使用：</p>
+<p>使用Arc<T>来进行原子引用记数，Arc<T>和RC<T>类似,它可以用于并发情景，Arc<T>和RC<T>的API是相同的：</p>
+<p>如下所示：</p>
+<p><img src="/../assets/img/25-3.jpg" alt="图25-3" title="25-3"></p>
+<p>A:atomic,意为原子的，既然如此，为什么所有的基础类型都不是原子的,为什么标准库类型不默认使用Arc<T>呢，因为需要性能作为代价</p>
+<h4 id="四-RefCell-Rc-vs-Mutex-Arc"><a href="#四-RefCell-Rc-vs-Mutex-Arc" class="headerlink" title="四.RefCell &#x2F; Rc vs Mutex &#x2F; Arc"></a>四.RefCell<T> &#x2F; Rc<T> vs Mutex<T> &#x2F; Arc<T></h4><p>Mutex<T>提供了内部可变性,和Cell家族一样,我们使用RefCell<T>来改变Rc<T>里面的内容,我们使用Mutex<T>来改变Arc<T>里面的内容</p>
+<p>注意:Mutex<T>有死锁风险</p>
+<h4 id="五-Send-和Sync-trait"><a href="#五-Send-和Sync-trait" class="headerlink" title="五.Send 和Sync trait"></a>五.Send 和Sync trait</h4><p>Rust语言的并发特性较少,目前讲的并发特新都来自标准库(而不是语言本身),但无需局限于标准库的并发,可以自己实现并发</p>
+<p>但在Rust语言中有两个并发概念:</p>
+<p>std::marker::Sync 和std::marker::Send 这两个 trait</p>
+<h5 id="Send-允许线程间转移所有权"><a href="#Send-允许线程间转移所有权" class="headerlink" title="Send:允许线程间转移所有权"></a>Send:允许线程间转移所有权</h5><p>实现Send trait的类型可在线程间转移所有权，Rust中几乎所有的类型都实现了Send，但RC<T>没有实现Send,它<strong>只用于单线程情景</strong></p>
+<p>任何完全由Send类型组成的类型也被标记为Send，除了原始指针之外,几乎所有的基础类型都是Send</p>
+<h5 id="Sync-允许从多线程访问"><a href="#Sync-允许从多线程访问" class="headerlink" title="Sync:允许从多线程访问"></a>Sync:允许从多线程访问</h5><p>实现Sync的类型可以安全的被多个线程引用，也就是说:如果T是Sync,那么&amp;T就是Send，引用可以被安全的送往另一个线程</p>
+<p>基础类型都是Sync，完全由Sync类型组成的类型也是Sync</p>
+<p>但RC<T>不是Sync的，RefCell<T>和Cell<T>家族也不是Sync的，而Mutex<T>是Sync的</p>
+<h4 id="六-实现一个多线程任务调度器"><a href="#六-实现一个多线程任务调度器" class="headerlink" title="六.实现一个多线程任务调度器"></a>六.实现一个多线程任务调度器</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">use std::sync::&#123;Arc, Mutex&#125;;</span><br><span class="line">use std::thread::&#123;self, sleep, JoinHandle&#125;;</span><br><span class="line">use std::sync::mpsc;</span><br><span class="line">use std::time::Duration;</span><br><span class="line"></span><br><span class="line">struct Task &#123;</span><br><span class="line">    id: usize,</span><br><span class="line">    action: Arc&lt;Mutex&lt;Box&lt;dyn Fn() + Send +Sync&gt;&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct Scheduler &#123;</span><br><span class="line">    task_queue: Arc&lt;Mutex&lt;Vec&lt;Arc&lt;Task&gt;&gt;&gt;&gt;,</span><br><span class="line">    thread_pool: Vec&lt;JoinHandle&lt;()&gt;&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Scheduler &#123;</span><br><span class="line">    fn new() -&gt; Self &#123;</span><br><span class="line">        Scheduler &#123;</span><br><span class="line">            task_queue: Arc::new(Mutex::new(Vec::new())),</span><br><span class="line">            thread_pool: Vec::new(),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn add_task&lt;F&gt;(&amp;mut self, id: usize, action: F)</span><br><span class="line">    where</span><br><span class="line">        F: Fn() +&#x27;static +Send + Sync,</span><br><span class="line">    &#123;</span><br><span class="line">        let task = Task &#123;</span><br><span class="line">            id,</span><br><span class="line">            action: Arc::new(Mutex::new(Box::new(action))),</span><br><span class="line">        &#125;;</span><br><span class="line">        self.task_queue.lock().unwrap().push(task.into());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn start(&amp;mut self, num_threads: usize) &#123;</span><br><span class="line">        let (sender, receiver) = mpsc::channel();</span><br><span class="line">        let receiver = Arc::new(Mutex::new(receiver));</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        for task in self.task_queue.lock().unwrap().iter() &#123;</span><br><span class="line">            sender.send(Arc::clone(task)).unwrap(); // 发送任务</span><br><span class="line">            thread::sleep(Duration::from_millis(10)); // 模拟任务间隔</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        for _ in 0..num_threads &#123;</span><br><span class="line">            let receiver_clone = Arc::clone(&amp;receiver);</span><br><span class="line">            let handle = thread::spawn(move || loop &#123;</span><br><span class="line">                match receiver_clone.lock().unwrap().recv() &#123;</span><br><span class="line">                    Ok(task) =&gt; &#123;</span><br><span class="line">                        let action_lock = task.action.lock().unwrap();</span><br><span class="line">                        (action_lock)(); // 执行闭包</span><br><span class="line">                    &#125;,</span><br><span class="line">                    Err(_) =&gt; break, // 通道已关闭</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            self.thread_pool.push(handle);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fn get_results(&amp;mut self) &#123;</span><br><span class="line">        for handle in self.thread_pool.drain(..) &#123;</span><br><span class="line">            handle.join().unwrap(); // 等待每个线程完成</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut scheduler = Scheduler::new();</span><br><span class="line"></span><br><span class="line">    scheduler.add_task(1, || &#123;println!(&quot;111&quot;);&#125;);</span><br><span class="line">    scheduler.add_task(2, || &#123;println!(&quot;222&quot;);&#125;);</span><br><span class="line">    scheduler.add_task(3, || &#123;println!(&quot;333&quot;);&#125;);</span><br><span class="line">    scheduler.add_task(4, || &#123;println!(&quot;444&quot;);&#125;);</span><br><span class="line"></span><br><span class="line">    scheduler.start(4);</span><br><span class="line"></span><br><span class="line">    thread::sleep(Duration::from_secs(1));</span><br><span class="line"></span><br><span class="line">    scheduler.get_results();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/11/09/rust25/" data-id="cm391q96u0000x4uyfuqgbv2i" data-title="rust 学习笔记二十五 Rust中的共享内存" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust24" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/11/03/rust24/" class="article-date">
@@ -828,93 +916,6 @@
 
 
   
-    <article id="post-rust15" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/10/rust15/" class="article-date">
-  <time class="dt-published" datetime="2024-10-09T16:17:15.815Z" itemprop="datePublished">2024-10-10</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/10/rust15/">rust 学习笔记十五 Rust 的模块化</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）	概念"></a>（一）	概念</h3><h4 id="1-packages"><a href="#1-packages" class="headerlink" title="1. packages"></a>1. packages</h4><p>一项cargo特性，可让您<strong>构建、测试和共享crates</strong>, 一个packages可以包含多个binary crates和可选的lib crates。至少包含一个crate</p>
-<p>Packages的基础结构如图所示：</p>
-<p><img src="/../assets/img/15-1.jpg" alt="图15-1" title="15-1"></p>
-<p>其中bin目录下存放的就是多个binary crates，通过<code>cargo new</code>创建的项目就是一个标准的package结构，如果在创建时使用<code>cargo new –lib name</code>, 创建出的src目录下的主文件就是lib.rs(正常情况下是main.rs)像这样创建出的package就是只有单个crate，这两种crate分别叫<strong>binary crate和lib crate</strong>，区别在于binary crate是可以直接通过cargo run 执行的，而lib则不能</p>
-<h4 id="2-crates"><a href="#2-crates" class="headerlink" title="2. crates"></a>2. crates</h4><p>生成库或可执行文件的module tree, 刚才有提到，crates分为binary crate 和 library crate，一般情况下有一个lib crate,项目的bin目录下包含多个binary crate</p>
-<h4 id="3-modules-and-use"><a href="#3-modules-and-use" class="headerlink" title="3. modules and use"></a>3. modules and use</h4><p>控制路径的组织、范围和隐私</p>
-<p>在一个crate中可以包含多个module</p>
-<p>首先是module的声明</p>
-<h5 id="a-使用mod关键字："><a href="#a-使用mod关键字：" class="headerlink" title="a. 使用mod关键字："></a>a. 使用mod关键字：</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>模块中可以定义方法, 同时模块也支持嵌套：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    fn echo() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    mod b &#123;</span><br><span class="line">        fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>当需要在同crate中的main函数访问mod中的方法时, 需要通过双冒号调用：</p>
-<p><img src="/../assets/img/15-2.jpg" alt="图15-2" title="15-2"></p>
-<p>发现报错：方法是<strong>默认私有</strong>的，现在我们需要用到pub关键字</p>
-<h5 id="b-pub关键字："><a href="#b-pub关键字：" class="headerlink" title="b. pub关键字："></a>b. pub关键字：</h5><p>将mod中的对应法修改为共有的</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pub fn echo() &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>但是此时如果需要在子模块b中调用父级模块a的echo方法，是可以不用声明为pub的，只不过需要在子模块中声明<code>use super::echo;</code>表示继承父模块的方法</p>
-<p>如果mod中嵌套的层级较深，需要调用很底层的方法的话，除了需要将路径上的子模块和方法都设置为pub外，每次调用都写出全部路径似乎显得不够简洁，影响可读性，在这里可以用到use关键字</p>
-<h5 id="c-use关键字"><a href="#c-use关键字" class="headerlink" title="c. use关键字:"></a>c. use关键字:</h5><p><img src="/../assets/img/15-3.jpg" alt="图15-3" title="15-3"></p>
-<p>之后就可以在外层直接通过方法名调用了, 当不同路径的两个同名的方法都被use声明时，为了区分，需要将其中一个方法用as关键字声明为另外的别名</p>
-<h5 id="d-as关键字"><a href="#d-as关键字" class="headerlink" title="d. as关键字:"></a>d. as关键字:</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">use a::&#123;b::log, log as other_log&#125;;</span><br><span class="line">fn main() &#123;</span><br><span class="line">    //a::b::log();</span><br><span class="line"></span><br><span class="line">    log();</span><br><span class="line">    other_log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>同时as在rust中也可以用于基础类型的类型转换</p>
-<h5 id="从刚才的pub中可以扩展说一下Rust中的可见性控制"><a href="#从刚才的pub中可以扩展说一下Rust中的可见性控制" class="headerlink" title="从刚才的pub中可以扩展说一下Rust中的可见性控制"></a>从刚才的pub中可以扩展说一下Rust中的可见性控制</h5><p><strong>private(default)</strong> 默认情况下都是私有的</p>
-<p><strong>pub(crate)</strong> 仅限于在同一个crate内为公开，其余crate不能调用</p>
-<p><strong>pub(in path)</strong> 范围更加精细，控制只能在具体的模块中能访问</p>
-<p><strong>pub use</strong></p>
-<p>假设有以下结构：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// 在 lib.rs 或 main.rs</span><br><span class="line">mod outer &#123;</span><br><span class="line">    pub mod inner &#123;</span><br><span class="line">        pub fn public_function() &#123;</span><br><span class="line">            println!(&quot;Called public_function()&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pub use outer::inner::public_function;</span><br></pre></td></tr></table></figure>
-
-<p>通过 pub use，我们将 publicfunction 重新导出到了 crate 的根作用域。现在，其他模块可以使用 use 语句直接访问 public_function，而不需要指定完整的模块路径：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">use crate::public_function;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    public_function(); // 直接调用，无需通过模块路径</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="4-Paths"><a href="#4-Paths" class="headerlink" title="4.Paths"></a>4.Paths</h4><p>一种命名项目的方式，例如struct、function或modules, 分为<strong>absolute path crate  绝对路径，relative path super self 相对路径</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">fn main() &#123;</span><br><span class="line">    crate::a::log();</span><br><span class="line">    a::b::log();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">mod a &#123;</span><br><span class="line">    const num:usize = 1;</span><br><span class="line">    pub fn log() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    pub mod b &#123;</span><br><span class="line">        pub fn log() &#123;</span><br><span class="line">            </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>其中<code>crate::a::log();</code>是绝对路径, <code>a::b::log();</code>是相对路径, 同时上文中还提到了用super关键字来调用父级mod的方法，self表示模块本身,用于调用同一个mod中的其他方法</p>
-<h4 id="5-workspace"><a href="#5-workspace" class="headerlink" title="5.workspace:"></a>5.workspace:</h4><p>Workspace是一个由多个crates组成的项目结构，主要用于</p>
-<p>代码共享：</p>
-<p>在 workspace 中，你可以有一个或多个crate（library crates）和二进制 crate（binary crates）。crate 可以被其他 crate 作为依赖项使用，从而实现代码的共享。</p>
-<p>以及统一依赖管理：</p>
-<p>workspace 允许你在一个中央位置管理所有 crate 的依赖，这有助于避免重复的依赖项和版本冲突。</p>
-<p>使用方法是：使用 cargo new 创建子目录，并在每个子目录中创建一个新的 Cargo.toml 文件，然后配置依赖关系：在根 Cargo.toml 文件中使用 [workspace] 部分配置依赖关系：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[workspace]</span><br><span class="line">menbers=[&quot;xx&quot;,&quot;xx&quot;,&quot;xx&quot;]</span><br></pre></td></tr></table></figure>
-
-<p>workspace中可以有一个主package，也可以没有</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/10/rust15/" data-id="cm222ty5b0000pguyhx2sh1hc" data-title="rust 学习笔记十五 Rust 的模块化" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -951,6 +952,10 @@
       <ul>
         
           <li>
+            <a href="/2024/11/09/rust25/">rust 学习笔记二十五 Rust中的共享内存</a>
+          </li>
+        
+          <li>
             <a href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
           </li>
         
@@ -964,10 +969,6 @@
         
           <li>
             <a href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/26/rust20/">rust 学习笔记二十 Rust中的宏</a>
           </li>
         
       </ul>
