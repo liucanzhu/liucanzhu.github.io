@@ -69,6 +69,65 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust17" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/10/13/rust17/" class="article-date">
+  <time class="dt-published" datetime="2024-10-13T09:03:48.873Z" itemprop="datePublished">2024-10-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/10/13/rust17/">rust 学习笔记十七 Rust 泛型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）	概念"></a>（一）	概念</h3><p>当使用泛型定义函数时,本来在函数签名中指定参数和返回值的类型的地方,会改用泛型来表示。采用这种技术,使得代码适应性更强,从而为函数的调用者提供更多的功能,同时也避免了代码的重复。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn add&lt;T&gt;(a:T,b:T) -&gt;T &#123;</span><br><span class="line">    a+b</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面代码的T就是泛型参数<br>不是所有T类型都能进行相加操作,因此我们需要用std::ops::Add&lt;Output&#x3D;T&gt;对T进行限制:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">fn add&lt;T: std::ops::Add&lt;Output = T&gt;&gt;(a: T, b: T) -&gt; T&#123;</span><br><span class="line">    a+b</span><br><span class="line">&#125;</span><br><span class="line">fn main()&#123;</span><br><span class="line">    println!(&quot;add i8:&#123;&#125;&quot;, add(2i8, 3i8));</span><br><span class="line">    println!(&quot;add i32:&#123;&#125;&quot;, add(20, 30));</span><br><span class="line">    println!(&quot;add f64:&#123;&#125;&quot;, add(1.32, 1.32));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同理，比较大小的泛型函数也需要声明，传入的T都是支持大小符号比较的</p>
+<h3 id="（二）结构体定义中的泛型"><a href="#（二）结构体定义中的泛型" class="headerlink" title="（二）结构体定义中的泛型"></a>（二）结构体定义中的泛型</h3><p>声明结构体名称后面的<strong>尖括号中声明泛型参数的名称</strong>,结构体定义中可以指定具体数据类型的位置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct Point &lt;T&gt;&#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: T,</span><br><span class="line">&#125;</span><br><span class="line">fn main()&#123;</span><br><span class="line">    let integer=Point&#123;x:5,y:10&#125;;</span><br><span class="line">    let float=Point&#123;x:1.0,y:4.0&#125;;</span><br><span class="line">    let wont_work=Point&#123;x:5,y:4&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="（三）枚举中使用泛型"><a href="#（三）枚举中使用泛型" class="headerlink" title="（三）枚举中使用泛型"></a>（三）枚举中使用泛型</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> enum Option&lt;T&gt; &#123;</span><br><span class="line">    Some(T),</span><br><span class="line">    None</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">enum Result&lt;T, E&gt; &#123;</span><br><span class="line">    Ok(T),</span><br><span class="line">    Err(E)</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<h3 id="（四）方法中使用泛型"><a href="#（四）方法中使用泛型" class="headerlink" title="（四）方法中使用泛型"></a>（四）方法中使用泛型</h3><p><img src="/../assets/img/17-1.jpg" alt="图17-1" title="17-1"></p>
+<p>如图所示：两个结构体实例的参数类型完全不相同，通过泛型完成了二者参数的组合，形成了另一类新的结构体实例</p>
+<h3 id="（五）const泛型-Rust1-51版本引入的重要特性"><a href="#（五）const泛型-Rust1-51版本引入的重要特性" class="headerlink" title="（五）	const泛型(Rust1.51版本引入的重要特性)"></a>（五）	const泛型(Rust1.51版本引入的重要特性)</h3><p>[i32;3]和[i32;2]是两个完全不同的类型,因此无法用同一个函数调用。</p>
+<p><img src="/../assets/img/17-3.jpg" alt="图17-3" title="17-3"></p>
+<p>如图所示：当规定了传入的数组长度时，就必须传入固定长度的数组，否则会报错，如果我们希望争对不同长度的数组复用这个函数时，可以改为泛型传入，并将参数改为引用</p>
+<p><img src="/../assets/img/17-2.jpg" alt="图17-2" title="17-2"></p>
+<p>也可以不传入引用，增加一个表示长度的参数：</p>
+<p>此时需要用到const泛型，此处定义的N限制了传入必须是已经确定长度的数组</p>
+<p><img src="/../assets/img/17-4.jpg" alt="图17-4" title="17-4"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/10/13/rust17/" data-id="cm27d26zx000024uyggri8lkl" data-title="rust 学习笔记十七 Rust 泛型" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust16" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/10/12/rust16/" class="article-date">
@@ -1105,84 +1164,6 @@
 
 
   
-    <article id="post-rust7" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/10/rust7/" class="article-date">
-  <time class="dt-published" datetime="2024-09-09T17:51:03.438Z" itemprop="datePublished">2024-09-10</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/10/rust7/">rust 学习笔记七 Rust 中的引用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="（一）在rust中，引用分为可变引用和不可变引用"><a href="#（一）在rust中，引用分为可变引用和不可变引用" class="headerlink" title="（一）在rust中，引用分为可变引用和不可变引用"></a>（一）在rust中，引用分为可变引用和不可变引用</h3><p>·不可变引用(Immutable Reference):通过不可变引用,可以读取数据,但不能修改数据。一个变量可以有多个不可变引用,但不能与可变引用共存</p>
-<p>示例如下：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line"><span class="built_in">let</span> s2 = &amp;s1;</span><br><span class="line"><span class="built_in">let</span> s3 = &amp;s1;</span><br></pre></td></tr></table></figure>
-
-<p>可变引用(Mutable Reference):通过可变引用,可以读取和修改数据。一个变量在某一时刻只能有一个可变引用,且不能与不可变引用共存</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line"><span class="built_in">let</span> s2 = &amp;mut s1;</span><br></pre></td></tr></table></figure>
-
-<p>综上，同一时间内一个变量只能<strong>有一个可变引用或者多个不可变引用，且必须总是有效</strong></p>
-<p>但是在以下情况下，是可以正常执行的：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut s1 = String::from(<span class="string">&quot;Hello&quot;</span>);</span><br><span class="line"><span class="built_in">let</span> s2 = &amp;s1;</span><br><span class="line"><span class="built_in">let</span> s3 = &amp;s1;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;, &#123;&#125;&quot;</span>,s2, s3);</span><br><span class="line"><span class="built_in">let</span> s4 = &amp; mut s1;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,s4);</span><br></pre></td></tr></table></figure>
-
-<p>但是在这种情况下，是可以正常执行的，因为可以把2~4行中对于s1的引用视作一个单独的作用域，而在打印结束之后不会有关于引用的使用，所以可以视作对s1的不可变引用已经结束了，所以不会影响后面继续对s1创建可变引用</p>
-<h3 id="（二）关于引用的一些概念"><a href="#（二）关于引用的一些概念" class="headerlink" title="（二）关于引用的一些概念"></a>（二）关于引用的一些概念</h3><ol>
-<li><p>Move</p>
-<p> 主要描述堆数据所有权的转移</p>
-</li>
-<li><p>borrowing</p>
-<p> 在向函数传入参的时候，函数对于变量所有权的借用</p>
-</li>
-<li><p>referenceing</p>
-<p> 包含了borrowing 以及 字符串和数组的切片（对堆上某一段数据的引用）</p>
-</li>
-</ol>
-<h3 id="（三）生命周期"><a href="#（三）生命周期" class="headerlink" title="（三）生命周期"></a>（三）生命周期</h3><p>生命周期是Rust用来保证引用有效性的机制。生命周期注解允许编译器推断引用的有效范围,确保在引用仍然有效时使用它们</p>
-<p>先看下面的示例：</p>
-<p><img src="/../assets/img/7-1.jpg" alt="图7-1" title="7-1"></p>
-<p>直接这样写会报错，提示是不能返回一个对于函数中临时值的引用，前文所有权中见过，作用域结束时会自动调用drop，在其他地方调用会导致<strong>悬垂指针</strong>的问题</p>
-<p>在rust中，解决办法是：</p>
-<p><img src="/../assets/img/7-2.jpg" alt="图7-2" title="7-2"></p>
-<p>在外面创建一个空变量，将其可变引用传入函数进行修改，然后返回</p>
-<p>或者：</p>
-<p><img src="/../assets/img/7-3.jpg" alt="图7-3" title="7-3"></p>
-<p>但如果向下面这样传入引用修改：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = getLongest(&amp;<span class="string">&quot;a&quot;</span>.to_owned(), &amp;<span class="string">&quot;b&quot;</span>.to_owned());</span><br><span class="line">fn getLongest(a: &amp;String,b :&amp;String) -&gt; &amp;String&#123;</span><br><span class="line">    <span class="keyword">if</span> a.len() &gt; b.<span class="function"><span class="title">len</span></span>()&#123;</span><br><span class="line">        a</span><br><span class="line">    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">        b</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">print</span>!(<span class="string">&quot;&#123;&#125;&quot;</span>,a);</span><br></pre></td></tr></table></figure>
-
-<p>会报错：<strong>缺少生命周期</strong></p>
-<p>此时我们需要根据提示标记一下声明周期’a，（具体原因后面描述），像下面这样，即可通过编译</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> s1 = <span class="string">&quot;a&quot;</span>.to_owned();</span><br><span class="line"><span class="built_in">let</span> s2 = <span class="string">&quot;b&quot;</span>.to_owned();</span><br><span class="line"><span class="built_in">let</span> a = getLongest(&amp;s1, &amp;s2);</span><br><span class="line">fn getLongest&lt;<span class="string">&#x27;a&gt;(a: &amp;&#x27;</span>a String,b :&amp;<span class="string">&#x27;a String) -&gt; &amp;&#x27;</span>a String&#123;</span><br><span class="line">    <span class="keyword">if</span> a.len() &gt; b.<span class="function"><span class="title">len</span></span>()&#123;</span><br><span class="line">        a</span><br><span class="line">    &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">        b</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">print</span>!(<span class="string">&quot;&#123;&#125;&quot;</span>,a);</span><br></pre></td></tr></table></figure>
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/10/rust7/" data-id="cm0vaxrzs0000pkuyc2837ljl" data-title="rust 学习笔记七 Rust 中的引用" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1219,6 +1200,10 @@
       <ul>
         
           <li>
+            <a href="/2024/11/17/solana2/">solana 学习笔记二 Solana开发入门</a>
+          </li>
+        
+          <li>
             <a href="/2024/11/13/solana1/">solana 学习笔记一 Solana基础与环境搭建</a>
           </li>
         
@@ -1232,10 +1217,6 @@
         
           <li>
             <a href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/29/rust22/">rust 学习笔记二十二 Rust中的迭代器&amp;关联类型</a>
           </li>
         
       </ul>
