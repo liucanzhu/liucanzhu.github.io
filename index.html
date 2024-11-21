@@ -69,6 +69,109 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-solana3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/11/21/solana3/" class="article-date">
+  <time class="dt-published" datetime="2024-11-21T15:07:48.483Z" itemprop="datePublished">2024-11-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/11/21/solana3/">solana 学习笔记二 Solana基础，账户与简单交互</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="一-solana中的账户主要分为以下几种："><a href="#一-solana中的账户主要分为以下几种：" class="headerlink" title="一. solana中的账户主要分为以下几种："></a>一. solana中的账户主要分为以下几种：</h3><ol>
+<li><p>数据账户,用来存储数据</p>
+</li>
+<li><p>系统所有账户</p>
+</li>
+<li><p>程序派生账户(PDA)</p>
+</li>
+<li><p>程序账户,用来存储可执行程序</p>
+</li>
+<li><p>原生账户,指Solana上的原生程序,例如”System”,”Stake”,以及”Vote”</p>
+</li>
+</ol>
+<h3 id="二-账户结构如下："><a href="#二-账户结构如下：" class="headerlink" title="二. 账户结构如下："></a>二. 账户结构如下：</h3><h4 id="1-Account"><a href="#1-Account" class="headerlink" title="1. Account"></a>1. Account</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#[derive(Deserialize, PartialEq, Eq, Eq, Clone, Default)]</span><br><span class="line">#[serde(rename_all = &quot;camelCase&quot;)]</span><br><span class="line">pub struct Account &#123;</span><br><span class="line">/// lamports in the account</span><br><span class="line">pub lamports: u64,</span><br><span class="line">/// data held in this account</span><br><span class="line">#[serde(with = &quot;serde_bytes&quot;)]</span><br><span class="line">pub data: Vec&lt;u8&gt;,</span><br><span class="line">/// the program that owns this account. If executable, the program that loads this account.</span><br><span class="line">pub owner:Pubkey,</span><br><span class="line">/// this account&#x27;s data contains a loaded program (and is now read-only)</span><br><span class="line">executable: bool,</span><br><span class="line">///the epoch at which this account will next owe rent</span><br><span class="line">pub rent_epoch:Epoch,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-Accountlnfo"><a href="#2-Accountlnfo" class="headerlink" title="2. Accountlnfo"></a>2. Accountlnfo</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">/// Account information</span><br><span class="line">#[derive(Clone)]</span><br><span class="line">#[repr(C)]</span><br><span class="line">pub struct AccountInfo&lt;&#x27;a&gt; &#123;</span><br><span class="line">/// Public key of the account</span><br><span class="line">pub key: &amp;&#x27;a Pubkey,</span><br><span class="line">/// The lamports in the account. Modifiable by programs.</span><br><span class="line">pub lamports:Rc&lt;RefCell&lt;&amp;&#x27;a mut u64&gt;&gt;,</span><br><span class="line">/// The data held in this account. Modifiable by programs.</span><br><span class="line">pub data: Rc&lt;RefCell&lt;&amp;&#x27;a mut [u8]&gt;&gt;,</span><br><span class="line">/// Program that owns this account</span><br><span class="line">pub owner: &amp; a Pubkey,</span><br><span class="line">/// The epoch at which this account will next owe rent</span><br><span class="line">pub rent_epoch:Epoch,</span><br><span class="line">/// Was the transaction signed by this account&#x27;s publikey?</span><br><span class="line">pub is_signer:bool,</span><br><span class="line">/// Is the account writable?</span><br><span class="line">pub is_writable: bool,</span><br><span class="line">/// This account&#x27;s data contains a loaded program (and is now read-only)</span><br><span class="line">pub executable: bool,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-Account-AccountInfo对比"><a href="#3-Account-AccountInfo对比" class="headerlink" title="3. Account&amp;AccountInfo对比"></a>3. Account&amp;AccountInfo对比</h4><h5 id="Accountlnfo"><a href="#Accountlnfo" class="headerlink" title="Accountlnfo:"></a>Accountlnfo:</h5><p>更轻量级,包含对区块链上现有账户数据的引用。<br>用于在Solana程序(智能合约)内部处理账户。<br>适合在链上处理和操作账户数据。</p>
+<h5 id="Account"><a href="#Account" class="headerlink" title="Account:"></a>Account:</h5><p>更完整的账户表示,包含账户的所有数据副本。<br>常用于客户端或测试环境中,用于模拟或获取完整的账户状态。<br>适合离线处理或全局管理账户数据。</p>
+<h4 id="要点"><a href="#要点" class="headerlink" title="要点"></a>要点</h4><p>账户是用来存放数据的<br>每个账户都有一个独一无二的地址<br>每个账户大小不能超过10MB<br>账户大小是静态的<br>账户数据存储需要付租金<br>默认的账户所有者是”系统程序</p>
+<h3 id="三-程序派生账户"><a href="#三-程序派生账户" class="headerlink" title="三. 程序派生账户"></a>三. 程序派生账户</h3><h4 id="1-PDA特性"><a href="#1-PDA特性" class="headerlink" title="1. PDA特性"></a>1. PDA特性</h4><h5 id="a-不能直接签名交易"><a href="#a-不能直接签名交易" class="headerlink" title="a.不能直接签名交易"></a>a.不能直接签名交易</h5><p>限制:PDA账户<strong>没有私钥,因此无法像普通账户那样签名交易。</strong><br>影响:这意味着PDA无法自主发起交易,它<strong>只能被相关的智能合约程序用作数据存储或执行操作</strong>。这确保了PDA只能在程序的控制下使用。</p>
+<h5 id="b-地址碰撞的可能性"><a href="#b-地址碰撞的可能性" class="headerlink" title="b.地址碰撞的可能性"></a>b.地址碰撞的可能性</h5><p>限制:在理论上,虽然非常罕见,使用相同的程序ID和相同的种子值可以生成相同的PDA地址。<br>影响:这意味着在设计智能合约时,开发者必须谨慎选择种子值,以确保不会产生地址碰撞。一般来说,通过使用唯一的种子(比如用户的公钥和其他独特的数据),可以避免这种问题。</p>
+<h5 id="c-PDA地址的最大长度"><a href="#c-PDA地址的最大长度" class="headerlink" title="c.PDA地址的最大长度"></a>c.PDA地址的最大长度</h5><p>限制:PDA的种子值组合在一起不能超过32字节(bytes)。<br>影响:如果你的数据太大,可能无法直接作为种子使用。你可能需要对数据进行哈希处理或其他方式来适应这个限制。</p>
+<h5 id="d-生成PDA的计算成本"><a href="#d-生成PDA的计算成本" class="headerlink" title="d.生成PDA的计算成本"></a>d.生成PDA的计算成本</h5><p>限制:PDA是通过哈希函数计算生成的,这个过程消耗计算资源源。<br>影响:在性能敏感的应用中,频繁生成PDA可能增加链上计算的成本,影响程序的执行效率。因此,在设计程序时需要平衡性能和安全性。</p>
+<h5 id="e-单一程序的访问"><a href="#e-单一程序的访问" class="headerlink" title="e.单一程序的访问"></a>e.单一程序的访问</h5><p>限制:PDA账户是<strong>由一个特定的程序生成和控制的,只有这个程序可以操作该PDA账户。</strong><br>影响:虽然这提供了很强的安全性,但也意味着你不能轻易地跨移序共享PDA账户。如果多个程序需要访问相同的数据,可能需要复杂的设计或数据复制。</p>
+<h5 id="f-内存账户的使用"><a href="#f-内存账户的使用" class="headerlink" title="f.内存账户的使用"></a>f.内存账户的使用</h5><p>限制:如果PDA被用作Solana上的内存账户(即需要存储较多的数据),这些账户的大小是有限制的,<strong>超过一定大小需要支付更高的费用来增加内存租金。</strong><br>影响:你需要考虑PDA账户的数据量,避免不必要的存储开销,或者拆分数据存储到多个PDA账户中。</p>
+<h4 id="2-PDA应用场景"><a href="#2-PDA应用场景" class="headerlink" title="2. PDA应用场景"></a>2. PDA应用场景</h4><p>1.用户状态管理<br>2.去中心化金融(DeFi)协议<br>3.NFT元数据存储<br>4.DAO(去中心化自治组织)投票系统<br>5.时间锁合约<br>6.多签(Multisig)钱包<br>7.去中心化身份验证</p>
+<h3 id="四-Rust开发solana"><a href="#四-Rust开发solana" class="headerlink" title="四. Rust开发solana:"></a>四. Rust开发solana:</h3><h4 id="1-以下三个库在开发中经常使用"><a href="#1-以下三个库在开发中经常使用" class="headerlink" title="1.以下三个库在开发中经常使用"></a>1.以下三个库在开发中经常使用</h4><p>Solana_client</p>
+<p>Solana_sdk</p>
+<p>Solane_program</p>
+<h4 id="2-实战"><a href="#2-实战" class="headerlink" title="2.实战"></a>2.实战</h4><p>启动本地环境</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solana-test-validator --reset</span><br></pre></td></tr></table></figure>
+
+<p>更改solana配置,链接到本地开发环境</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solana config set --url http://127.0.0.1:8899</span><br></pre></td></tr></table></figure>
+
+<p>创建本地账户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solana-keygen new -o ~/.config/solana/ad1.json</span><br></pre></td></tr></table></figure>
+
+<p>此时公钥在：</p>
+<p><img src="/../assets/img/28-1.jpg" alt="图28-1" title="28-1"></p>
+<p>其中的pubkey</p>
+<p>私钥：</p>
+<p><img src="/../assets/img/28-4.jpg" alt="图28-4" title="28-4"></p>
+<p>将本地账户切换到刚才创建的公钥：</p>
+<p><img src="/../assets/img/28-2.jpg" alt="图28-2" title="28-2"></p>
+<p>给新建账户空投sol</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Solana airdrop 10</span><br></pre></td></tr></table></figure>
+
+<p>使用SDK</p>
+<h5 id="a-空投sol"><a href="#a-空投sol" class="headerlink" title="a.空投sol"></a>a.空投sol</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">let amount = 2_000_000_000;</span><br><span class="line">match client.request_airdrop(&amp;account_pubkey, amount) &#123;</span><br><span class="line">    Ok(signature)=&gt;println!(&quot;获取空投成功，交易签名：&#123;:?&#125;&quot;,signature),</span><br><span class="line">    Err(err) =&gt; println!(&quot;空投失败&#123;:?&#125;&quot;,err),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="b-获取账号信息"><a href="#b-获取账号信息" class="headerlink" title="b.获取账号信息"></a>b.获取账号信息</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">let rpc_url = &quot;http://127.0.0.1:8899&quot;;</span><br><span class="line"></span><br><span class="line">let client = RpcClient::new(rpc_url);</span><br><span class="line"></span><br><span class="line">//指定要查询的账户公钥,from_str返回值是result</span><br><span class="line">let account_pubkey = Pubkey::from_str(&quot;AEjMNU9eDwEsDh35JWjXtyFdSRGCN4utDaMMQSbwz4v3&quot;).unwrap();</span><br><span class="line"></span><br><span class="line">match client.get_balance(&amp;account_pubkey) &#123;</span><br><span class="line">    Ok(balance) =&gt; println!(&quot;账户余额&#123;:?&#125;&quot;,balance),</span><br><span class="line">    Err(_) =&gt; todo!(), </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="c-转移sol"><a href="#c-转移sol" class="headerlink" title="c.转移sol"></a>c.转移sol</h5><p>用之前的指令创建一个新的账号：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solana-keygen new -o ~/.config/solana/ad1.json</span><br></pre></td></tr></table></figure>
+
+<p>得到新的pubkey，作为转账操作的接收地址，先通过</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">solana config set –pubkey ./.config/solana/ad2.json</span><br></pre></td></tr></table></figure>
+
+<p>查看余额发现当前余额为0,然后切回之前的账户，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">let rpc_url = &quot;http://127.0.0.1:8899&quot;;</span><br><span class="line"></span><br><span class="line">    let client = RpcClient::new(rpc_url);</span><br><span class="line"></span><br><span class="line">    //指定要查询的账户公钥,from_str返回值是result</span><br><span class="line">    let sender = read_keypair_file(&quot;/home/lcz/.config/solana/ad2.json&quot;).expect(&quot;failed&quot;);</span><br><span class="line"></span><br><span class="line">    let receiver_pubkey =  Pubkey::from_str(&quot;AEjMNU9eDwEsDh35JWjXtyFdSRGCN4utDaMMQSbwz4v3&quot;).unwrap();</span><br><span class="line">    </span><br><span class="line">    //创建转账指令</span><br><span class="line">    let transaction_order = transfer(&amp;sender.pubkey(), &amp;receiver_pubkey, 1000000000);</span><br><span class="line">    </span><br><span class="line">    //创建交易</span><br><span class="line">    let recent_blockhash = client.get_latest_blockhash().unwrap();</span><br><span class="line"></span><br><span class="line">    let transaction = Transaction::new_signed_with_payer(&amp;[transaction_order],Some( &amp;sender.pubkey()), &amp;[&amp;sender], recent_blockhash);</span><br><span class="line">    </span><br><span class="line">    let result = client.send_and_confirm_transaction(&amp;transaction);</span><br><span class="line">    </span><br><span class="line">    match result&#123;</span><br><span class="line">        Ok(signature)=&gt;println!(&quot;转账成功，交易签名：&#123;:?&#125;&quot;,signature),</span><br><span class="line">        Err(err) =&gt; println!(&quot;转账失败&#123;:?&#125;&quot;,err),</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行显示转账成功，此时查看新账号的余额，发现为1sol</p>
+<h4 id="e-通过JsonRpc获取账户信息"><a href="#e-通过JsonRpc获取账户信息" class="headerlink" title="e.通过JsonRpc获取账户信息"></a>e.通过JsonRpc获取账户信息</h4><p>可以直接在终端向指定的网络rpc发起请求, 在请求中说明你需要调用的方法和参数：</p>
+<p><img src="/../assets/img/28-3.jpg" alt="图28-3" title="28-3"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/11/21/solana3/" data-id="cm3rgcatc0000lguyc2v6hptf" data-title="solana 学习笔记二 Solana基础，账户与简单交互" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-solana2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/11/17/solana2/" class="article-date">
@@ -826,77 +929,6 @@
 
 
   
-    <article id="post-rust18" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/15/rust18/" class="article-date">
-  <time class="dt-published" datetime="2024-10-15T13:45:07.177Z" itemprop="datePublished">2024-10-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/15/rust18/">rust 学习笔记十八 Rust中的生命周期</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>生命周期在rust中用于<strong>内存安全，帮助编译器处理悬垂指针的问题</strong></p>
-<h3 id="（一）创建"><a href="#（一）创建" class="headerlink" title="（一）	创建"></a>（一）	创建</h3><p>在Rust中,生命周期主要通过生命周期注解来创建和使用。生命周期注解是一种显式声明引用有效时间的方式,通常用’a、’b这样的符号表示。</p>
-<p>示例:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn longest&lt;&#x27;a&gt;(x: &amp;&#x27;a str, y: &amp;&#x27;a str) -&gt; &amp;&#x27;a str &#123;</span><br><span class="line">    if x.len() &gt; y.len() &#123;</span><br><span class="line">        x</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        У</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这个示例中,longest函数接受两个字符串切片参数,并过返回其中一个更长的字符串切片。’a生命周期注解表明<strong>返回的生命周期与输入参数的生命周期相同</strong></p>
-<h3 id="（二）分类"><a href="#（二）分类" class="headerlink" title="（二）	分类"></a>（二）	分类</h3><h4 id="1-fn"><a href="#1-fn" class="headerlink" title="1.fn:"></a>1.fn:</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">fn example&lt;&#x27;a&gt;(input: &amp;&#x27;a str)-&gt; &amp;&#x27;a str&#123;</span><br><span class="line">    input</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-struct"><a href="#2-struct" class="headerlink" title="2.struct"></a>2.struct</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct: struct Example&lt;&#x27;a&gt; &#123;</span><br><span class="line">    part: &amp;&#x27;a str,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-enum"><a href="#3-enum" class="headerlink" title="3.enum"></a>3.enum</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">enum: enum StringOption&lt;&#x27;a&gt; &#123;</span><br><span class="line">    Some(&amp;&#x27;a str),</span><br><span class="line">    None</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（三）使用场景"><a href="#（三）使用场景" class="headerlink" title="（三）	使用场景"></a>（三）	使用场景</h3><p>在rust开发中，什么时候需要显式的添加生命周期呢，理论上，当牵涉到值的引用传递时，我们都需要声明生命周期，因为其他类型的数据，rust能检测到数据的存活周期，能自动识别什么时候应该释放这些数据<br>但也不是所有包含了引用值传递的情况修需要声明生命周期：</p>
-<p>看下面这个例子：</p>
-<p><img src="/../assets/img/18-1.jpg" alt="图18-1" title="18-1"></p>
-<p>在这种情况下，没有声明，但是也没有任何报错,实际上，在上面代码编译过程中，rust自动帮我们完成了这部分工作，那么什么情况下rust会自动帮我们完成这部分工作呢：</p>
-<h4 id="生命周期消除-LifetimeElision"><a href="#生命周期消除-LifetimeElision" class="headerlink" title="生命周期消除(LifetimeElision)"></a>生命周期消除(LifetimeElision)</h4><p>rust编译器自动推理,无需手动重复添加</p>
-<p>1.每个引用参数都有自己的生命周期参数。所以当参数为单个引用的时候不会报错：</p>
-<p><img src="/../assets/img/18-2.jpg" alt="图18-2" title="18-2"></p>
-<p>2.如果只有一个输入引用参数,那么它的生命周期会被赋予所有输出引用。</p>
-<p><img src="/../assets/img/18-3.jpg" alt="图18-3" title="18-3"></p>
-<p>因为函数执行完后所有变量都将被drop,所以唯一可以作为参考的就是入参的生命周期了</p>
-<p>3.如果有多个输入生命周期参数,但其中一个是&amp;self或&amp;mut self,那么 self的生命周期会被赋予所有输出引用。</p>
-<h4 id="特殊生命周期标注"><a href="#特殊生命周期标注" class="headerlink" title="特殊生命周期标注"></a>特殊生命周期标注</h4><p>‘static生命周期表示整个程序运行期间都有效的生命周期。这通常用于全局变量或字符串字面量。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">let s: &amp;&#x27;static str = &quot;hello&quot;;</span><br><span class="line">const SOME_COORDINATE: (i32, i32) = (7, 4);</span><br><span class="line">let static_reference: &amp;&#x27;static (i32, i32) = &amp;SOME_COORDINATE;</span><br></pre></td></tr></table></figure>
-
-<p>如果在一个impl中，并不关注每个函数中的生命周期（默认和结构体实例的生命周期相同），则可以在最开始声明时用一个占位符代替,</p>
-<p>如下所示：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">struct Counter&lt;&#x27;a&gt; &#123;</span><br><span class="line">    counter: &amp;&#x27;a mut i32</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl  Counter&lt;&#x27;_&gt; &#123;</span><br><span class="line">    fn increment(&amp;mut self) &#123;</span><br><span class="line">        *self.counter += 1;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="生命周期约束"><a href="#生命周期约束" class="headerlink" title="生命周期约束"></a>生命周期约束</h4><p>生命周期注解可以用来约束多个引用之间的关系</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fn example&lt;&#x27;a, &#x27;b&gt;(x: &amp;&#x27;a str, y: &amp;&#x27;b str) -&gt; &amp;&#x27;a str</span><br><span class="line">where</span><br><span class="line">    &#x27;b:&#x27;a,</span><br><span class="line">&#123;</span><br><span class="line">    X</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在这个示例中,’b:’a表示生命周期 ‘b必须不短于a</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/15/rust18/" data-id="cm2ai0wj50000o4uy31ok0g0p" data-title="rust 学习笔记十八 Rust中的生命周期" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -933,6 +965,10 @@
       <ul>
         
           <li>
+            <a href="/2024/11/21/solana3/">solana 学习笔记二 Solana基础，账户与简单交互</a>
+          </li>
+        
+          <li>
             <a href="/2024/11/17/solana2/">solana 学习笔记二 Solana开发入门</a>
           </li>
         
@@ -946,10 +982,6 @@
         
           <li>
             <a href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
-          </li>
-        
-          <li>
-            <a href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
           </li>
         
       </ul>
