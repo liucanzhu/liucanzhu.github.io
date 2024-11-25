@@ -69,6 +69,85 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-solana4" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/11/26/solana4/" class="article-date">
+  <time class="dt-published" datetime="2024-11-25T17:04:27.157Z" itemprop="datePublished">2024-11-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/11/26/solana4/">solana 学习笔记四 Solana基础 - Token解析&amp;创建</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h3 id="一-token解释"><a href="#一-token解释" class="headerlink" title="一. token解释"></a>一. token解释</h3><p>代币是代表对各种资产所有权的数字资产。代币化使得财产权的数字化成为可能,是管理可替代和不可替代资产的基本组成部分。</p>
+<p>可替代代币代表同类型和同价值的可互换和可分割资产 (例如USDC)。</p>
+<p>不可替代代币(NFT)代表不可分割资产的所有权(例如艺术品)。</p>
+<h3 id="二-Solana的代币体系主要有以下部分组成："><a href="#二-Solana的代币体系主要有以下部分组成：" class="headerlink" title="二. Solana的代币体系主要有以下部分组成："></a>二. Solana的代币体系主要有以下部分组成：</h3><p>SPL (Solana Program Library)</p>
+<p>Token Program(代币程序)</p>
+<p>Mint Account(铸币账户) Mint Account是每个SPLToken的核心账户,负责代币的定义和管理。它包含了代币的全局属性,比如总供应量和小数位数。每个代币都由一个独立的Mint Account来表示。</p>
+<p>Decimals(小数位数):定义代币的最小单位,通常是0到9。</p>
+<p>Supply(供应量):代币的当前总供应量。</p>
+<p>Mint Authority(铸币权限):可以铸造新的代币的账户。</p>
+<p>Freeze Authority(冻结权限):可以冻结或解冻代币账)户的权限</p>
+<h3 id="三-功能"><a href="#三-功能" class="headerlink" title="三. 功能:"></a>三. 功能:</h3><p>铸造代币:当Mint Authority执行铸币操作时,新的代币会增加到总供应量中,并分配给指定的Token Account。</p>
+<p>销毁代币:减少总供应量。</p>
+<h3 id="四-账户分类"><a href="#四-账户分类" class="headerlink" title="四. 账户分类"></a>四. 账户分类</h3><h4 id="1-Token-Account-代币账户"><a href="#1-Token-Account-代币账户" class="headerlink" title="1. Token Account(代币账户)"></a>1. Token Account(代币账户)</h4><p>Token Account是用于持有特定SPLToken的账户。每个用户或者合约如果想要持有某种SPL Token,必须有一个与该Token对应的Token Account。不同的代币有不同的Token Account,账户之间无法混用月。</p>
+<h5 id="属性"><a href="#属性" class="headerlink" title="属性:"></a>属性:</h5><p>Amount(余额):账户中持有的代币数量。<br>Owner(账户拥有者):控制该账户的用户或合约地址。<br>Mint(铸币账户关联):该账户与哪个Mint Account相关联。<br>Delegate(代理账户):可以被授权管理该账户的其他账)户(可选)。<br>State(状态):账户是否处于冻结状态。</p>
+<h5 id="功能"><a href="#功能" class="headerlink" title="功能:"></a>功能:</h5><p>接收和发送代币:TokenAccount可以接受其他账户的代币,并通过转账指令将其发送给其他账户。</p>
+<p>代理权限管理:可以设置Delegate来授权第三方管理该账户的币。</p>
+<h4 id="2-Associated-Token-Account-关联代币账户"><a href="#2-Associated-Token-Account-关联代币账户" class="headerlink" title="2. Associated Token Account(关联代币账户)"></a>2. Associated Token Account(关联代币账户)</h4><p>Associated Token Account (ATA) 是 Token Account的一种特殊类型,简化了SPLToken的账户管理。ATA是自动与一个钱包地址绑定的账户,每个钱包地址和每个代币的Mint对应一个唯一的Token Account,因此该账户类型极大简化了代币管理。</p>
+<h5 id="特点"><a href="#特点" class="headerlink" title="特点:"></a>特点:</h5><p>唯一性:每个钱包地址只能有一个和某个Mint关联的ATA。</p>
+<p>自动生成:Solana提供了工具来自动生成ATA,开发者不需要手动管理账户。</p>
+<h5 id="功能-1"><a href="#功能-1" class="headerlink" title="功能:"></a>功能:</h5><p>自动处理钱包地址与代币账户之间的关联,方便用户管理不同的SPL Token。</p>
+<h3 id="五-Token演示："><a href="#五-Token演示：" class="headerlink" title="五. Token演示："></a>五. Token演示：</h3><p>在本地创建一个新的公私钥对，然后在本地创建新的代币，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">spl-token create-token</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../assets/img/29-1.jpg" alt="图29-1" title="29-1"></p>
+<p>此时会得到mint account（程序地址），以及签名 和 铸币程序的id, 然后通过spl-token account-info –address <mint account> 可以得到程序更详细的信息（包含作者）</p>
+<p><img src="/../assets/img/29-2.jpg" alt="图29-2" title="29-2"></p>
+<p>接下来是创建账户，直接通过</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">spl-token create-account &lt;mint account&gt;的方式可以创建与铸造账户相关联的ata账户</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../assets/img/29-3.jpg" alt="图29-3" title="29-3"></p>
+<p>将创建出来的ata账户在solana explore上搜索，发现有一个owner属性指向mint authority</p>
+<p>如果需要创建一个非ata账户，则需要新创建一个keypair对，将指令改为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">spl-token create-account &lt;mint account&gt; &lt;keypair_path&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../assets/img/29-4.jpg" alt="图29-4" title="29-4"></p>
+<p>这样就创建了一个非ata账户，在solana explore上搜索，发现owner也是指向mint authority, 此时也可以发现刚才创建的这两个账户余额都是0, 接下来为这两个账户铸造代币</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">spl-token mint &lt;mint_account&gt; &lt;amount&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/../assets/img/29-5.jpg" alt="图29-5" title="29-5"></p>
+<p>此时会默认为ata账户铸币，explore上查看发现余额已经为100, 如果需要为非ata账户铸币，需要指定receive account:</p>
+<p><img src="/../assets/img/29-6.jpg" alt="图29-6" title="29-6"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/11/26/solana4/" data-id="cm3xa5z1h0000j4uyao7lgsp5" data-title="solana 学习笔记四 Solana基础 - Token解析&amp;创建" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-solana3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/11/21/solana3/" class="article-date">
@@ -847,88 +926,6 @@
 
 
   
-    <article id="post-rust19" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/22/rust19/" class="article-date">
-  <time class="dt-published" datetime="2024-10-22T15:33:34.843Z" itemprop="datePublished">2024-10-22</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/22/rust19/">rust 学习笔记十九 Rust中的trait</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）概念"></a>（一）概念</h3><p>trait定义了某个特定类型拥有可能与其他类型共享的功能， 类似于其他语言中的常被称为接口(interfaces)的功能,!虽然有一些不同。</p>
-<h3 id="（二）实现"><a href="#（二）实现" class="headerlink" title="（二）实现"></a>（二）实现</h3><p>使用trait关键字来声明一个特征， Summary是特征名， 在大括号中定义了该特征的所有方法， 只定义特征方法的签名,而不进行实现,此时方法签名结尾是;而不是一个{}。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">pub trait Summary&#123;</span><br><span class="line">    fn summarize(&amp;self) -&gt;String;</span><br><span class="line">&#125;</span><br><span class="line">为类型实现特征</span><br><span class="line">pub trait Summary&#123;</span><br><span class="line">fn summarize(&amp;self) -&gt;String;</span><br><span class="line">&#125;</span><br><span class="line">pub struct Post&#123;</span><br><span class="line">    pub title:String,//标题</span><br><span class="line">    pub author:String,//作者</span><br><span class="line">    pub content:String,//内容</span><br><span class="line">&#125;</span><br><span class="line">impl Summary for Post&#123;</span><br><span class="line">    fn summarize(&amp;self) -&gt; String&#123;</span><br><span class="line">        format!(&quot;文章&#123;&#125;,作者是&#123;&#125;&quot;,self.title,self.author)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">pub struct Weibo&#123;</span><br><span class="line">    pub username:String,</span><br><span class="line">    pub content: String</span><br><span class="line">&#125;</span><br><span class="line">impl Summary for Weibo &#123;</span><br><span class="line">    fn summarize(&amp;self) -&gt;String&#123;</span><br><span class="line">        format!(&quot;&#123;&#125;发表了微博&#123;&#125;&quot;,self.username,self.content)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（三）特征定义与实现的位置-孤儿规则"><a href="#（三）特征定义与实现的位置-孤儿规则" class="headerlink" title="（三）特征定义与实现的位置(孤儿规则)"></a>（三）特征定义与实现的位置(孤儿规则)</h3><p>如果你想要为结构体 A 实现特征 T,那么A或者 T 至少有一个是在当前作用域中定义的!（即不要为标准库中的类型实现标准库中的特征）</p>
-<p>Trait中也可以直接对函数进行实现，这种情况下在为结构体实现trait时候就可以跳过已实现的方法，也可以对其进行重载</p>
-<h3 id="（四）带泛型的trait"><a href="#（四）带泛型的trait" class="headerlink" title="（四）带泛型的trait"></a>（四）带泛型的trait</h3><p>在具体方法调用的时候,必须加以类型标注以明确使用的:是哪一个具体的实现</p>
-<p>可以对同一个目标类型,多次impl此trait,每次提供不同的泛型参数</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">trait Converter&lt;T&gt; &#123;</span><br><span class="line">fn convert(&amp;self) -&gt; T;</span><br><span class="line">&#125;</span><br><span class="line">struct MyInt(i32);</span><br><span class="line">impl Converter&lt;String&gt;for MyInt &#123;</span><br><span class="line">    fn convert(&amp;self) -&gt;String &#123;</span><br><span class="line">        self.0.to_string()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">impl Converter&lt;f32&gt; for MyInt &#123;</span><br><span class="line">    fn convert(&amp;self) -&gt; f32 &#123;</span><br><span class="line">        self.0 as f32</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn main()&#123;</span><br><span class="line">    let my_int = MyInt(42);</span><br><span class="line">    let output:String=my_int.convert();</span><br><span class="line">    println!(&quot;outputis:&#123;&#125;&quot;,output);</span><br><span class="line">    let output:f32 = my_int.convert();</span><br><span class="line">    println!(&quot;output is:&#123;&#125;&quot;, output);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>在这种情况下，由于编译器不知道你需要的是针对哪种类型的同名方法convert，所以需要在变量output处显式的声明一下类型</p>
-<h3 id="（五）关联类型"><a href="#（五）关联类型" class="headerlink" title="（五）关联类型"></a>（五）关联类型</h3><p>关联类型是trait定义中的类型占位符。定义的时候,并不定义它的具体的类型是什么。在impl这个trait的时候,才为这个关联类型赋予确定的类型。也就是说,在实现的时候,才知道它的具体类型是什么。<br>·关联类型方式<strong>只允许对目标类型实现一次</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">trait Converter&#123;</span><br><span class="line">    type Output;</span><br><span class="line">    fn convert(&amp;self) -&gt;Self::Output;</span><br><span class="line">&#125;</span><br><span class="line">impl Converter for MyInt&#123;</span><br><span class="line">    type Output=String;</span><br><span class="line">    fn convert(&amp;self) -&gt;Self::Output &#123;</span><br><span class="line">        self.0.to_string()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（六）默认泛型类型参数"><a href="#（六）默认泛型类型参数" class="headerlink" title="（六）默认泛型类型参数"></a>（六）默认泛型类型参数</h3><p>实现Add trait(也是一种关联类型的trait)时不指定Rhs的具体类型,Rhs的类型将是默认的Self类型,也就是在其上实现Add的类型。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">trait Add&lt;Rhs=Self&gt; &#123;</span><br><span class="line">    type Output;</span><br><span class="line">    fn add(self,rhs:Rhs)-&gt;Self::Output;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>所以如果需要实现两种不同类型相加，需要在实现trait时声明另一种加数的类型：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct Millimeters(u32);</span><br><span class="line"></span><br><span class="line">struct Meters(u32);</span><br><span class="line"></span><br><span class="line">impl Add&lt;Meters&gt; for Millimeters &#123;</span><br><span class="line">    type Output = Millimeters;</span><br><span class="line"></span><br><span class="line">    fn add(self, rhs: Meters) -&gt; Millimeters &#123;</span><br><span class="line">        Millimeters(self.0 + rhs.0 * 1000)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（七）使用特征作为函数参数"><a href="#（七）使用特征作为函数参数" class="headerlink" title="（七）使用特征作为函数参数"></a>（七）使用特征作为函数参数</h3><h4 id="1-impl-Trait语法"><a href="#1-impl-Trait语法" class="headerlink" title="1.impl Trait语法"></a>1.impl Trait语法</h4><p>你可以使用任何实现了Summary特征的类型作为该函数的参数，除了单个约束条件,我们还可以通过+语法指定多个约束条件</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pub fn notify(item: &amp;impl Summary) &#123;</span><br><span class="line">    println!(&quot;Brenking news!&#123;&#125;&quot;, item.summarize());</span><br><span class="line">&#125;</span><br><span class="line">pub fn notify(item: &amp;(impl Summary + Display)) &#123;&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-Trait-Bound语法"><a href="#2-Trait-Bound语法" class="headerlink" title="2.Trait Bound语法"></a>2.Trait Bound语法</h4><p>impl Trait 适用于短小的例子,它trait bound语法糖, 更长的trait bound则适用于更复杂的场景,除了单个约束条件,我们还可以通过+语法指定多个约束条件</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pub fn notify&lt;T:Summary&gt;(ikem:&amp;T)&#123;</span><br><span class="line">println!(&quot;Breaking news!&#123;&#125;&quot;, item.summarize());</span><br><span class="line">&#125;</span><br><span class="line">pub fn notify&lt;T:Summary + Display&gt;(item:&amp;T)&#123;&#125;</span><br></pre></td></tr></table></figure>
-
-<p>也可以改为如下写法：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">fn notify&lt;T, U&gt;(item1: &amp;T, item2: &amp;U) </span><br><span class="line">where T:Summary + Display,</span><br><span class="line">      U:Summary + Display + Debug,</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>将泛型的类型声明写在后面增强代码易读性</p>
-<h3 id="（八）实现方法"><a href="#（八）实现方法" class="headerlink" title="（八）实现方法"></a>（八）实现方法</h3><p>可以有条件地只为那些实现了特定trait的类型实现方法，只有那些为T类型实现了Partialord trait(来允许比较)和Display trait(来启用打印)的Pair<T>才会实现cmp_display 方法</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">use std::fmt::Display;</span><br><span class="line">struct Pair&lt;T&gt;&#123;</span><br><span class="line">    x: T,</span><br><span class="line">    y: T</span><br><span class="line">&#125;</span><br><span class="line">impl&lt;T&gt; Pair&lt;T&gt;&#123;</span><br><span class="line">    fn new(x:T,y:T)-&gt;Self&#123;</span><br><span class="line">        Self&#123;x,y&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">impl&lt;T:Display + Partialord&gt; Pair&lt;T&gt;&#123;</span><br><span class="line">    fn cmp_display(&amp;self)&#123;</span><br><span class="line">        if self.x&gt;=self.y&#123;</span><br><span class="line">        println!(&quot;The largest member is x=&#123;&#125;&quot;,self.x);</span><br><span class="line">        &#125;else&#123;</span><br><span class="line">        println!(&quot;The largest member is y=&#123;&#125;&quot;,self.y);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="（九）impl-Trait-语法"><a href="#（九）impl-Trait-语法" class="headerlink" title="（九）impl Trait 语法"></a>（九）impl Trait 语法</h3><p>在返回值中使用impl Trait语法,来返回实现了某个trait的类型</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">fn returns_summarizable() -&gt; impl Summary &#123;</span><br><span class="line">    Tweet&#123;</span><br><span class="line">        username:String::from(&quot;horse_ebooks&quot;),</span><br><span class="line">        content:String::from(</span><br><span class="line">        &quot;of course, as you probably already know, people&quot;,</span><br><span class="line">        ),</span><br><span class="line">        reply: false,</span><br><span class="line">        retweet: false,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>但如果根据不同情况返回值是实现了该特征的不同结构，直接在返回类型写impl trait会报错，需要使用impl<code>&lt;dyn trait&gt;</code>的格式来运行时判断返回类型</p>
-<h3 id="trait-实践"><a href="#trait-实践" class="headerlink" title="trait 实践"></a>trait 实践</h3><p>应用了<strong>关联类型</strong>和<strong>动态分发</strong></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">use std::fmt::Display;</span><br><span class="line"></span><br><span class="line">trait Item&lt;T = String&gt;&#123;</span><br><span class="line">    type Output:Display;</span><br><span class="line">    fn summarize(&amp;self) -&gt; Self::Output;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct Apple&#123;</span><br><span class="line">    name: String,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Item for Apple&#123;</span><br><span class="line">    type Output = String;</span><br><span class="line">    fn summarize(&amp;self) -&gt; String&#123;</span><br><span class="line">        self.name.to_string()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">struct Weibo&#123;</span><br><span class="line">    author:String,</span><br><span class="line">    content:String,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Item for Weibo&#123;</span><br><span class="line">    type Output = String;</span><br><span class="line">    fn summarize(&amp;self) -&gt; String&#123;</span><br><span class="line">        format!(&quot;@&#123;&#125;:&#123;&#125;&quot;,self.author,self.content)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pub struct Container&#123;</span><br><span class="line">    items:Vec&lt;Box&lt;dyn Item&lt;Output = String&gt;&gt;&gt; ,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl Container&#123;</span><br><span class="line">    pub fn iterator(&amp;self)&#123;</span><br><span class="line">        for item in self.items.iter()&#123;</span><br><span class="line">            println!(&quot;&#123;&#125;&quot;,item.summarize());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">fn main()&#123;</span><br><span class="line">    let apple=Apple &#123;</span><br><span class="line">        name:&quot;Apple&quot;.to_string(),</span><br><span class="line">    &#125;;</span><br><span class="line">    let w=Weibo&#123;</span><br><span class="line">        author:&quot;weibo&quot;.to_string(),</span><br><span class="line">        content:&quot;hello&quot;.to_string(),</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    let container = Container &#123;</span><br><span class="line">        items:vec![Box::new(apple), Box::new(w)],</span><br><span class="line">    &#125;;</span><br><span class="line">    container.iterator();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/22/rust19/" data-id="cm2klvmdr0000l0uy2n369t0y" data-title="rust 学习笔记十九 Rust中的trait" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -965,6 +962,10 @@
       <ul>
         
           <li>
+            <a href="/2024/11/26/solana4/">solana 学习笔记四 Solana基础 - Token解析&amp;创建</a>
+          </li>
+        
+          <li>
             <a href="/2024/11/21/solana3/">solana 学习笔记三 Solana基础，账户与简单交互</a>
           </li>
         
@@ -978,10 +979,6 @@
         
           <li>
             <a href="/2024/11/09/rust25/">rust 学习笔记二十五 Rust中的共享内存</a>
-          </li>
-        
-          <li>
-            <a href="/2024/11/03/rust24/">rust 学习笔记二十四 Rust的并发</a>
           </li>
         
       </ul>
