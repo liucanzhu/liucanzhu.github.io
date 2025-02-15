@@ -69,6 +69,164 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-dex" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/02/15/dex/" class="article-date">
+  <time class="dt-published" datetime="2025-02-15T10:05:18.798Z" itemprop="datePublished">2025-02-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2025/02/15/dex/">本地开发DEX：购买ETF的两种策略</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h2 id="在-Solana-上实现-ETF-购买：两种-Token-存入方法的对比"><a href="#在-Solana-上实现-ETF-购买：两种-Token-存入方法的对比" class="headerlink" title="在 Solana 上实现 ETF 购买：两种 Token 存入方法的对比"></a><strong>在 Solana 上实现 ETF 购买：两种 Token 存入方法的对比</strong></h2><p>在 Solana 区块链上开发去中心化交易所（DEX）并实现 ETF（交易所交易基金）的购买功能的过程中，一个关键步骤是向合约账户存入指定种类的 Token。本文将重点介绍两种实现方法，并分析它们的优缺点。</p>
+<hr>
+<h3 id="1-背景介绍"><a href="#1-背景介绍" class="headerlink" title="1. 背景介绍"></a><strong>1. 背景介绍</strong></h3><p>ETF 是一种包含多种资产的投资工具，用户可以通过购买 ETF 来间接持有多种代币。在 Solana 上实现 ETF 购买功能时，我们需要解决以下问题：</p>
+<ul>
+<li>如何将用户持有的多种代币存入合约账户？</li>
+<li>如何确保交易的原子性和安全性？</li>
+<li>如何高效地处理多种代币的转移？</li>
+</ul>
+<p>针对这些问题，我们提出了两种解决方案：</p>
+<ol>
+<li><strong>使用 <code>remaining_accounts</code> 将所有需要的账户一起传入</strong>。</li>
+<li><strong>每次只进行一种代币的转移，将交易原子化</strong>。</li>
+</ol>
+<hr>
+<h3 id="2-方法一：使用-remaining-accounts-将所有账户一起传入"><a href="#2-方法一：使用-remaining-accounts-将所有账户一起传入" class="headerlink" title="2. 方法一：使用 remaining_accounts 将所有账户一起传入"></a><strong>2. 方法一：使用 <code>remaining_accounts</code> 将所有账户一起传入</strong></h3><h4 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a><strong>实现思路</strong></h4><ul>
+<li>将所有需要转移的代币账户（包括用户的 Token 账户和合约的 Token 账户）通过 <code>remaining_accounts</code> 传入合约。在合约中遍历这些账户，逐一进行代币转移。</li>
+</ul>
+<h4 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a><strong>代码示例</strong></h4><ul>
+<li>合约部分</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[program]</span></span><br><span class="line"><span class="meta">#[derive(Accounts)]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">EtfTokenTransaction</span>&lt;<span class="symbol">&#x27;info</span>&gt; &#123;</span><br><span class="line">    <span class="comment">// etf信息和控制token资产</span></span><br><span class="line">    <span class="meta">#[account(</span></span><br><span class="line"><span class="meta">        seeds = [</span></span><br><span class="line"><span class="meta">            EtfToken::SEED_PREFIX.as_bytes(),</span></span><br><span class="line"><span class="meta">            etf_token_mint_account.key().as_ref(),</span></span><br><span class="line"><span class="meta">        ]</span>,</span><br><span class="line">        bump,</span><br><span class="line">    )]</span><br><span class="line">    <span class="keyword">pub</span> etf_token_info: Account&lt;<span class="symbol">&#x27;info</span>, EtfToken&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> etf_token_mint_account: Account&lt;<span class="symbol">&#x27;info</span>, Mint&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(</span></span><br><span class="line"><span class="meta">        init_if_needed,</span></span><br><span class="line"><span class="meta">        payer = authority,</span></span><br><span class="line"><span class="meta">        associated_token::mint = etf_token_mint_account,</span></span><br><span class="line"><span class="meta">        associated_token::authority = authority,</span></span><br><span class="line"><span class="meta">    )]</span></span><br><span class="line">    <span class="keyword">pub</span> etf_token_ata: Account&lt;<span class="symbol">&#x27;info</span>, TokenAccount&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> authority: Signer&lt;<span class="symbol">&#x27;info</span>&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> token_program: Program&lt;<span class="symbol">&#x27;info</span>, Token&gt;,</span><br><span class="line">    <span class="keyword">pub</span> associated_token_program: Program&lt;<span class="symbol">&#x27;info</span>, AssociatedToken&gt;,</span><br><span class="line">    <span class="keyword">pub</span> system_program: Program&lt;<span class="symbol">&#x27;info</span>, System&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">etf_token_mint</span>&lt;<span class="symbol">&#x27;info</span>&gt;(</span><br><span class="line">    ctx: Context&lt;<span class="symbol">&#x27;_</span>, <span class="symbol">&#x27;_</span>, <span class="symbol">&#x27;_</span>, <span class="symbol">&#x27;info</span>, EtfTokenTransaction&lt;<span class="symbol">&#x27;info</span>&gt;&gt;,</span><br><span class="line">    lamports: <span class="type">u64</span>,</span><br><span class="line">) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="comment">// 使用remaining_accounts</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">accounts</span> = ctx</span><br><span class="line">        .remaining_accounts</span><br><span class="line">        .<span class="title function_ invoke__">iter</span>()</span><br><span class="line">        .<span class="title function_ invoke__">map</span>(|x| (x.<span class="title function_ invoke__">key</span>(), x.<span class="title function_ invoke__">to_owned</span>()))</span><br><span class="line">        .collect::&lt;HashMap&lt;_, _&gt;&gt;();</span><br><span class="line"></span><br><span class="line">    msg!(<span class="string">&quot;accounts: &#123;:?&#125;&quot;</span>, accounts.<span class="title function_ invoke__">keys</span>());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> <span class="variable">x</span> <span class="keyword">in</span> &amp;ctx.accounts.etf_token_info.constitunent &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">from_ata</span> = accounts</span><br><span class="line">            .<span class="title function_ invoke__">get</span>(&amp;<span class="title function_ invoke__">get_associated_token_address</span>(</span><br><span class="line">                &amp;ctx.accounts.authority.<span class="title function_ invoke__">key</span>(),</span><br><span class="line">                &amp;x.token,</span><br><span class="line">            ))</span><br><span class="line">            .<span class="title function_ invoke__">ok_or</span>(TokenMintError::InvalidAccounts)?;</span><br><span class="line"></span><br><span class="line">        msg!(</span><br><span class="line">            <span class="string">&quot;transfer to: &#123;&#125;&quot;</span>,</span><br><span class="line">            &amp;<span class="title function_ invoke__">get_associated_token_address</span>(&amp;ctx.accounts.etf_token_info.<span class="title function_ invoke__">key</span>(), &amp;x.token,)</span><br><span class="line">                .<span class="title function_ invoke__">key</span>()</span><br><span class="line">                .<span class="title function_ invoke__">to_string</span>()</span><br><span class="line">        );</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">to_ata</span> = accounts</span><br><span class="line">            .<span class="title function_ invoke__">get</span>(&amp;<span class="title function_ invoke__">get_associated_token_address</span>(</span><br><span class="line">                &amp;ctx.accounts.etf_token_info.<span class="title function_ invoke__">key</span>(),</span><br><span class="line">                &amp;x.token,</span><br><span class="line">            ))</span><br><span class="line">            .<span class="title function_ invoke__">ok_or</span>(TokenMintError::InvalidAccounts)?;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">let</span> <span class="variable">amount</span> = x.weight <span class="keyword">as</span> <span class="type">u64</span> * lamports / <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">transfer</span>(</span><br><span class="line">            CpiContext::<span class="title function_ invoke__">new</span>(</span><br><span class="line">                ctx.accounts.token_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                Transfer &#123;</span><br><span class="line">                    from: from_ata.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                    to: to_ata.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                    authority: ctx.accounts.authority.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                &#125;,</span><br><span class="line">            ),</span><br><span class="line">            amount,</span><br><span class="line">        )?;</span><br><span class="line"></span><br><span class="line">        msg!(<span class="string">&quot;success transfer token: &#123;&#125;&quot;</span>, x.token.<span class="title function_ invoke__">to_string</span>())</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// PDA signer seeds</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">m</span> = ctx.accounts.etf_token_mint_account.<span class="title function_ invoke__">key</span>();</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">signer_seeds</span>: &amp;[&amp;[&amp;[<span class="type">u8</span>]]] = &amp;[&amp;[</span><br><span class="line">        EtfToken::SEED_PREFIX.<span class="title function_ invoke__">as_bytes</span>(),</span><br><span class="line">        m.<span class="title function_ invoke__">as_ref</span>(),</span><br><span class="line">        &amp;[ctx.bumps.etf_token_info],</span><br><span class="line">    ]];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// mint token</span></span><br><span class="line">    <span class="title function_ invoke__">mint_to</span>(</span><br><span class="line">        CpiContext::<span class="title function_ invoke__">new_with_signer</span>(</span><br><span class="line">            ctx.accounts.token_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            MintTo &#123;</span><br><span class="line">                mint: ctx.accounts.etf_token_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                to: ctx.accounts.etf_token_ata.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                authority: ctx.accounts.etf_token_info.<span class="title function_ invoke__">to_account_info</span>(), <span class="comment">// PDA mint authority, required as signer</span></span><br><span class="line">            &#125;,</span><br><span class="line">            signer_seeds,</span><br><span class="line">        ),</span><br><span class="line">        lamports,</span><br><span class="line">    )?;</span><br><span class="line"></span><br><span class="line">    msg!(<span class="string">&quot;token minted successfully.&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>前端部分</li>
+</ul>
+<figure class="highlight ts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">#[program]</span><br><span class="line"><span class="keyword">export</span> <span class="keyword">async</span> <span class="keyword">function</span> <span class="title function_">tokenMint</span>(<span class="params"><span class="attr">wallet</span>: anchor.<span class="title class_">Wallet</span>, <span class="attr">etfAddress</span>: <span class="title class_">PublicKey</span>, <span class="attr">lamports</span>: <span class="built_in">number</span></span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> [etfCoreAddress] = <span class="title function_">deriveEtfokenInfoAccount</span>(etfAddress);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> etfInfo = <span class="keyword">await</span> program.<span class="property">account</span>.<span class="property">etfToken</span>.<span class="title function_">fetch</span>(etfCoreAddress);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> remainingAccounts = etfInfo.<span class="property">constitunent</span>.<span class="title function_">flatMap</span>(<span class="function">(<span class="params">item</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> [</span><br><span class="line">      <span class="title function_">getAssociatedTokenAddressSync</span>(item.<span class="property">token</span>, wallet.<span class="property">publicKey</span>),</span><br><span class="line">      <span class="title function_">getAssociatedTokenAddressSync</span>(item.<span class="property">token</span>, etfCoreAddress, <span class="literal">true</span>),</span><br><span class="line">    ];</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// todo: 检查所有ata是否存在，并且用户余额充足</span></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(remainingAccounts);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> ix = <span class="keyword">await</span> program.<span class="property">methods</span></span><br><span class="line">    .<span class="title function_">etfMint</span>(<span class="keyword">new</span> anchor.<span class="title function_">BN</span>(lamports))</span><br><span class="line">    .<span class="title function_">accounts</span>(&#123;</span><br><span class="line">      <span class="attr">etfTokenMintAccount</span>: etfAddress,</span><br><span class="line">      <span class="attr">authority</span>: wallet.<span class="property">publicKey</span>,</span><br><span class="line">    &#125;)</span><br><span class="line">    .<span class="title function_">remainingAccounts</span>(</span><br><span class="line">      remainingAccounts.<span class="title function_">map</span>(<span class="function">(<span class="params">item</span>) =&gt;</span> (&#123; <span class="attr">pubkey</span>: item, <span class="attr">isSigner</span>: <span class="literal">false</span>, <span class="attr">isWritable</span>: <span class="literal">true</span> &#125;)),</span><br><span class="line">    )</span><br><span class="line">    .<span class="title function_">transaction</span>();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> modifyComputeUnits = anchor.<span class="property">web3</span>.<span class="property">ComputeBudgetProgram</span>.<span class="title function_">setComputeUnitLimit</span>(&#123;</span><br><span class="line">    <span class="attr">units</span>: <span class="number">400_000</span>,</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">let</span> tx = <span class="keyword">new</span> anchor.<span class="property">web3</span>.<span class="title class_">Transaction</span>().<span class="title function_">add</span>(ix).<span class="title function_">add</span>(modifyComputeUnits);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">await</span> anchor.<span class="property">web3</span>.<span class="title function_">sendAndConfirmTransaction</span>(provider.<span class="property">connection</span>, tx, [wallet.<span class="property">payer</span>]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>我们可以发现，在前端和合约中都执行了类似于getAssociatedTokenAddress的操作，在前端调用 getAssociatedTokenAddressSync 和在合约中调用 get_associated_token_address 的目的不同，但它们共同确保了代币转移的正确性和安全性。</p>
+</li>
+<li><p>在前端，使用 getAssociatedTokenAddressSync 可以快速生成这些账户的地址，而不需要与链上交互。在前端生成账户地址后，可以检查这些账户是否存在。如果不存在，可以提前创建（如使用 createAssociatedTokenAccount）。这样可以避免在合约中因为账户不存在而导致交易失败。</p>
+</li>
+<li><p>在合约中，我们需要确保传入的账户地址是正确的。使用 get_associated_token_address 重新计算账户地址，并与传入的地址进行比较，可以防止前端传入错误的账户。</p>
+</li>
+</ul>
+<p>所以通过两次调用，可以确保前端和合约中的账户地址一致，避免因地址错误导致的交易失败。</p>
+<ul>
+<li>另外，由于购买该etf份额所需的所有token都在这次操作中完成了transfer,所以mint也可以在这个操作中一起完成</li>
+</ul>
+<h4 id="优点"><a href="#优点" class="headerlink" title="优点"></a><strong>优点</strong></h4><ul>
+<li><strong>一次性完成所有代币转移</strong>：减少交易次数，降低 Gas 费用。</li>
+<li><strong>代码简洁</strong>：逻辑集中在一个函数中，前端的代码更加简洁，易于维护。</li>
+</ul>
+<h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a><strong>缺点</strong></h4><ul>
+<li><strong>灵活性差</strong>：所有代币转移必须同时成功，否则整个交易失败。</li>
+<li><strong>账户管理复杂</strong>：需要在前端准确构造 <code>remaining_accounts</code>，容易出错。</li>
+</ul>
+<hr>
+<h3 id="3-方法二：每次只进行一种代币的转移"><a href="#3-方法二：每次只进行一种代币的转移" class="headerlink" title="3. 方法二：每次只进行一种代币的转移"></a><strong>3. 方法二：每次只进行一种代币的转移</strong></h3><h4 id="实现思路-1"><a href="#实现思路-1" class="headerlink" title="实现思路"></a><strong>实现思路</strong></h4><ul>
+<li>每次只转移一种代币，将交易原子化。</li>
+<li>在前端分别调用这些交易，确保每次转移都经过 SPL Token 的校验。</li>
+<li>在合约中根据代币的 Mint 地址生成关联账户（Associated Token Account）。</li>
+</ul>
+<h4 id="代码示例-1"><a href="#代码示例-1" class="headerlink" title="代码示例"></a><strong>代码示例</strong></h4><figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[program]</span></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">fn</span> <span class="title function_">buy_etf</span>(ctx: Context&lt;BuyEtf&gt;, amount: <span class="type">u64</span>) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;()&gt; &#123;</span><br><span class="line">    <span class="title function_ invoke__">transfer</span>(</span><br><span class="line">        CpiContext::<span class="title function_ invoke__">new</span>(</span><br><span class="line">            ctx.accounts.token_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            Transfer &#123;</span><br><span class="line">                from: ctx.accounts.buyer_token_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">                to: ctx.accounts.etf_token_account.<span class="title function_ invoke__">to_account_info</span>(), </span><br><span class="line">                authority: ctx.accounts.buyer.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            &#125;,</span><br><span class="line">        ),</span><br><span class="line">        amount,</span><br><span class="line">    )?;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">order</span> = ctx.accounts.order.<span class="title function_ invoke__">clone</span>(); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (index, token_transfer) <span class="keyword">in</span> order.tokens.<span class="title function_ invoke__">iter_mut</span>().<span class="title function_ invoke__">enumerate</span>() &#123;</span><br><span class="line">        <span class="keyword">if</span> token_transfer.token_name == (ctx.accounts.token).<span class="title function_ invoke__">to_account_info</span>().<span class="title function_ invoke__">key</span>()</span><br><span class="line">            &amp;&amp; token_transfer.amount == amount</span><br><span class="line">        &#123;</span><br><span class="line">            token_transfer.transferred = <span class="literal">true</span>; </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ctx.accounts.order.tokens = order.tokens.<span class="title function_ invoke__">clone</span>();</span><br><span class="line"></span><br><span class="line">    <span class="title function_ invoke__">Ok</span>(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Accounts)]</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">pub</span> <span class="keyword">struct</span> <span class="title class_">BuyEtf</span>&lt;<span class="symbol">&#x27;info</span>&gt; &#123;</span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> order: Account&lt;<span class="symbol">&#x27;info</span>, Order&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> author: Account&lt;<span class="symbol">&#x27;info</span>, User&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> token: <span class="type">Box</span>&lt;Account&lt;<span class="symbol">&#x27;info</span>, Mint&gt;&gt;,</span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> etf: Account&lt;<span class="symbol">&#x27;info</span>, Etf&gt;, </span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> buyer: Signer&lt;<span class="symbol">&#x27;info</span>&gt;, </span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(mut)]</span></span><br><span class="line">    <span class="keyword">pub</span> etf_creator: Signer&lt;<span class="symbol">&#x27;info</span>&gt;, </span><br><span class="line"></span><br><span class="line">    <span class="meta">#[account(</span></span><br><span class="line"><span class="meta">        init_if_needed,</span></span><br><span class="line"><span class="meta">        payer = buyer,</span></span><br><span class="line"><span class="meta">        associated_token::mint = token,</span></span><br><span class="line"><span class="meta">        associated_token::authority = buyer,</span></span><br><span class="line"><span class="meta">    )]</span></span><br><span class="line">    <span class="keyword">pub</span> buyer_token_account: Account&lt;<span class="symbol">&#x27;info</span>, TokenAccount&gt;, </span><br><span class="line"></span><br><span class="line">    <span class="comment">//associated</span></span><br><span class="line">    <span class="meta">#[account(</span></span><br><span class="line"><span class="meta">        init_if_needed,</span></span><br><span class="line"><span class="meta">        payer = etf_creator,</span></span><br><span class="line"><span class="meta">        associated_token::mint = token,</span></span><br><span class="line"><span class="meta">        associated_token::authority = etf_creator,</span></span><br><span class="line"><span class="meta">    )]</span></span><br><span class="line">    <span class="keyword">pub</span> etf_token_account: Account&lt;<span class="symbol">&#x27;info</span>, TokenAccount&gt;,</span><br><span class="line"></span><br><span class="line">    <span class="keyword">pub</span> system_program: Program&lt;<span class="symbol">&#x27;info</span>, System&gt;,</span><br><span class="line">    <span class="keyword">pub</span> token_program: Program&lt;<span class="symbol">&#x27;info</span>, Token&gt;,</span><br><span class="line">    <span class="keyword">pub</span> associated_token_program: Program&lt;<span class="symbol">&#x27;info</span>, AssociatedToken&gt;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>将交易原子化后，单个方法的代码变得简洁，但是整个购买过程需要在前端多次调用该方法，最后单独调用mint方法。</p>
+</li>
+<li><p>在使用这种方法时需注意，由于 mint 方法被单独封装并在链上公开，存在被错误调用的风险。例如，恶意用户可能会直接调用 mint 方法，而无需完成所有代币的转移，从而导致系统状态不一致。</p>
+</li>
+</ul>
+<p>为了解决这个问题，我们可以在创建购买申请时生成一个 order，用于记录每种资产的转移状态。具体步骤如下：</p>
+<h4 id="创建-order："><a href="#创建-order：" class="headerlink" title="创建 order："></a>创建 order：</h4><p>在用户发起购买申请时，生成一个 order 账户，用于记录每种资产的转移状态（如 未转移 或 已转移）。</p>
+<p>order 中存储每种资产的 Mint 地址、目标金额以及转移状态。</p>
+<h4 id="更新转移状态："><a href="#更新转移状态：" class="headerlink" title="更新转移状态："></a>更新转移状态：</h4><p>每次完成一种资产的转移后，更新 order 中对应资产的转移状态。</p>
+<p>确保每次转移都是原子操作，避免部分转移导致的状态不一致。</p>
+<h4 id="检查-order："><a href="#检查-order：" class="headerlink" title="检查 order："></a>检查 order：</h4><p>在调用 mint 方法之前，检查 order 中所有资产的转移状态。</p>
+<p>只有当所有资产都已成功转移时，才允许执行 mint 操作。</p>
+<h4 id="通过这种方式，我们可以确保："><a href="#通过这种方式，我们可以确保：" class="headerlink" title="通过这种方式，我们可以确保："></a>通过这种方式，我们可以确保：</h4><p>交易的完整性：所有资产必须完成转移后才能进行 mint。</p>
+<p>防止错误调用：恶意用户无法直接调用 mint，必须按照正确的流程完成所有步骤。</p>
+<p>状态一致性：通过 order 记录转移状态，避免因部分转移导致的状态不一致。</p>
+<h4 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a><strong>优点</strong></h4><ul>
+<li><strong>灵活性高</strong>：每次只转移一种代币，失败不会影响其他代币。</li>
+<li><strong>安全性高</strong>：每次转移都经过 SPL Token 的校验，确保账户和金额的正确性。</li>
+<li><strong>易于扩展</strong>：可以轻松支持新的代币类型。</li>
+</ul>
+<h4 id="缺点-1"><a href="#缺点-1" class="headerlink" title="缺点"></a><strong>缺点</strong></h4><ul>
+<li><strong>交易次数多</strong>：每种代币都需要单独调用一次交易，可能增加 Gas 费用。</li>
+<li><strong>前端逻辑复杂</strong>：需要在前端管理多次交易的调用顺序和状态。</li>
+</ul>
+<hr>
+<h3 id="4-两种方法的对比"><a href="#4-两种方法的对比" class="headerlink" title="4. 两种方法的对比"></a><strong>4. 两种方法的对比</strong></h3><table>
+<thead>
+<tr>
+<th><strong>对比项</strong></th>
+<th><strong>方法一：<code>remaining_accounts</code></strong></th>
+<th><strong>方法二：原子化交易</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>交易次数</strong></td>
+<td>一次交易完成所有代币转移</td>
+<td>每种代币需要一次交易</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>低（所有代币转移必须同时成功）</td>
+<td>高（每种代币转移独立）</td>
+</tr>
+<tr>
+<td><strong>安全性</strong></td>
+<td>依赖前端正确构造 <code>remaining_accounts</code></td>
+<td>每次转移都经过 SPL Token 校验</td>
+</tr>
+<tr>
+<td><strong>代码复杂度</strong></td>
+<td>合约逻辑集中，前端逻辑简单</td>
+<td>合约逻辑分散，前端逻辑复杂</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>代币种类固定且数量较少</td>
+<td>代币种类动态或数量较多</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="5-总结"><a href="#5-总结" class="headerlink" title="5. 总结"></a><strong>5. 总结</strong></h3><p>在 Solana 上实现 ETF 购买功能时，向合约账户存入指定种类的 Token 是一个关键步骤。本文介绍了两种实现方法：</p>
+<ol>
+<li><strong>使用 <code>remaining_accounts</code> 将所有账户一起传入</strong>：适合代币种类固定且数量较少的场景。</li>
+<li><strong>每次只进行一种代币的转移</strong>：适合代币种类动态或数量较多的场景，具有更高的灵活性和安全性。</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2025/02/15/dex/" data-id="cm76gthk600006ouy12q0dvf6" data-title="本地开发DEX：购买ETF的两种策略" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-solana4" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/11/26/solana4/" class="article-date">
@@ -859,73 +1017,6 @@
 
 
   
-    <article id="post-rust20" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/26/rust20/" class="article-date">
-  <time class="dt-published" datetime="2024-10-25T16:02:23.857Z" itemprop="datePublished">2024-10-26</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/26/rust20/">rust 学习笔记二十 Rust中的宏</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Rust中的宏主要分为两种：</p>
-<h3 id="（一）声明式宏"><a href="#（一）声明式宏" class="headerlink" title="（一）声明式宏"></a>（一）声明式宏</h3><p>声明宏(Declarative Macros),也称为”macro_rules!”,是最常见的宏类型。它们允许你通过模式匹配来生成代码。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">fn main()&#123;</span><br><span class="line">    say_hello!();</span><br><span class="line">    say_hello! &#123;&#125;;</span><br><span class="line">    let var_name = say_hello![];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//定义一个简单的宏来打印消息</span><br><span class="line"></span><br><span class="line">#[macro_export]</span><br><span class="line">macro_rules! say_hello &#123;</span><br><span class="line">    () =&gt; &#123;</span><br><span class="line">        println!(&quot;Hello, world!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>和函数相比，声明宏在调用时候需要加！，且可以传入变参,并且从上面的代码可以发现，调用时可以用[], {}, ()三种方式</p>
-<p>Rust中常见的声明式宏主要有：println format等</p>
-<h3 id="（二）过程宏"><a href="#（二）过程宏" class="headerlink" title="（二）过程宏"></a>（二）过程宏</h3><p>过程宏(Procedural Macros)允许你使用函数生成代码。它们分为三种类型:</p>
-<h4 id="1-派生宏"><a href="#1-派生宏" class="headerlink" title="1.派生宏"></a>1.派生宏</h4><p>常用的derive 主要用在struct和enum中</p>
-<p>创建：</p>
-<p>创建一个新项目，在toml中声明：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[lib]</span><br><span class="line">proc-macro = true</span><br></pre></td></tr></table></figure>
-
-<p>表示这是一个扩展宏, 然后再依赖中添加 quote 和 syn 用于将我们的代码与AST树之间相互转换</p>
-<p>举例:</p>
-<p>创建：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">use proc_macro:: TokenStream;</span><br><span class="line">use quote::quote;</span><br><span class="line">#[proc_macro_derive(HelloMacro)]</span><br><span class="line">pub fn hello_macro_derive(input: TokenStream) -&gt; TokenStream &#123;</span><br><span class="line">    let ast=syn::parse(input).unwrap();</span><br><span class="line">    let name = &amp;ast.ident;</span><br><span class="line">    let gen = quote!&#123;</span><br><span class="line">        impl HelloMacro for #name &#123;</span><br><span class="line">            fn hello_macro()&#123;</span><br><span class="line">                println!(&quot;Hello, Macro! My name is &#123;&#125;!&quot;, stringify!(#name));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    gen.into()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>调用：导入之后通过derive衍生</p>
-<h4 id="2-属性宏-Attribute-like-macro"><a href="#2-属性宏-Attribute-like-macro" class="headerlink" title="2.属性宏(Attribute-like macro)"></a>2.属性宏(Attribute-like macro)</h4><p>比如：在测试前面声明的#[test]，指定一个条件编译的配置选项:<code>#![cfg(target_arch)]</code>， 用于抑制编译器对未使用代码的警告:#![allow(dead_code)]<br>声明：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#[route(GET, &quot;/&quot;)]</span><br><span class="line">fn index()</span><br><span class="line">#[proc_macro_attribute]</span><br><span class="line">pub fn route(attr:TokenStream,item:TokenStream) -&gt; TokenStream &#123;</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-函数宏-Function-like-macro"><a href="#3-函数宏-Function-like-macro" class="headerlink" title="3.函数宏(Function-like macro)"></a>3.函数宏(Function-like macro)</h4><p>比如 dbg!：	assert! 和 assert_eq!等</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#[proc_macro]</span><br><span class="line">pub fn sql(input: TokenStream) -&gt;TokenStream&#123;</span><br></pre></td></tr></table></figure>
-
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>创建声明宏:使用 macro_rules!定义宏,通过模式匹配生成代码。<br>创建过程宏:使用过程宏函数<code>(#[proc_macro])</code>、派生宏<code>(#[proc_macro_derive])</code>和属性宏<code>(#[proc_macro_attribute])</code>生成代码。</p>
-<p>宏的应用场景<br>1.减少重复代码:通过宏生成重复的代码。<br>2.编译期计算:在<strong>编译期</strong>进行计算并生成代码,提高运行时性能。<br>3.DSL(领域特定语言):使用宏定义领域特定语言,提高代码的表达力和可读性。</p>
-<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>使用通过<code>macro_rules!</code>实现对应的macro</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">//定义宏</span><br><span class="line">macro_rules! repeat &#123;</span><br><span class="line">    ($string:expr, $n:expr) =&gt; &#123;&#123;</span><br><span class="line">        let mut result = String::new();</span><br><span class="line">        for _ in 0..$n &#123;</span><br><span class="line">            result.push_str($string);</span><br><span class="line">        &#125;</span><br><span class="line">        result</span><br><span class="line">    &#125;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">macro_rules! sum &#123;</span><br><span class="line">    ($($val:expr),+) =&gt; &#123;&#123;</span><br><span class="line">        let mut total = 0;</span><br><span class="line">        $(</span><br><span class="line">            total += $val;</span><br><span class="line">        )+</span><br><span class="line">        total</span><br><span class="line">    &#125;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">macro_rules! max_value &#123;</span><br><span class="line"></span><br><span class="line">    ($x:expr) =&gt; &#123; $x &#125;;</span><br><span class="line"></span><br><span class="line">    ($x:expr, $($rest:expr),+) =&gt; &#123;</span><br><span class="line">        if $x &gt; max_value!($($rest),+) &#123;</span><br><span class="line">            $x</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            max_value!($($rest),+)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    // 使用宏</span><br><span class="line">    assert_eq!(repeat!(&quot;x&quot;, 3), &quot;xxx&quot;);</span><br><span class="line">    assert_eq!(sum!(1, 2, 3, 4, 5), 15);</span><br><span class="line">    assert_eq!(max_value!(1, 8, 9), 9);</span><br><span class="line">    </span><br><span class="line">    println!(&quot;All tests passed!&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/26/rust20/" data-id="cm2oxbt5z00003guyeo4qappl" data-title="rust 学习笔记二十 Rust中的宏" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -949,7 +1040,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/02/">February 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
     </div>
   </div>
 
@@ -960,6 +1051,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/02/15/dex/">本地开发DEX：购买ETF的两种策略</a>
+          </li>
         
           <li>
             <a href="/2024/11/26/solana4/">solana 学习笔记四 Solana基础 - Token解析&amp;创建</a>
@@ -977,10 +1072,6 @@
             <a href="/2024/11/13/solana1/">solana 学习笔记一 Solana基础与环境搭建</a>
           </li>
         
-          <li>
-            <a href="/2024/11/09/rust25/">rust 学习笔记二十五 Rust中的共享内存</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -994,7 +1085,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       
-      &copy; 2024 Liu Canzhu<br>
+      &copy; 2025 Liu Canzhu<br>
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
