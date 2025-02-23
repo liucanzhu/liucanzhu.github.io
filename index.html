@@ -69,6 +69,138 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-nftmint" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/02/23/nftmint/" class="article-date">
+  <time class="dt-published" datetime="2025-02-23T09:21:54.855Z" itemprop="datePublished">2025-02-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2025/02/23/nftmint/">本地开发DEX：nft创建与mint的两种方式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在本地开发这个功能的时候，对metaplex 官网以及其他博客的信息进行了调研和整合，最终发现以下两种方式：anchor_spl 的 create_master_edition_v3 和 create_metadata_accounts_v3，以及 mpl_token_metadata 的 CreateV1CpiBuilder 和 MintV1CpiBuilder。我们将从代码结构、功能实现、易用性和灵活性等方面进行分析，并结合代码示例详细讲解它们的实现过程。</p>
+<p>这两种方式其实本质上非常相似，先看依赖关系：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> anchor_spl::&#123;</span><br><span class="line">    associated_token::AssociatedToken,</span><br><span class="line">    metadata::&#123;</span><br><span class="line">        create_master_edition_v3, create_metadata_accounts_v3,</span><br><span class="line">        mpl_token_metadata::&#123;</span><br><span class="line">            instructions::&#123;CreateV1CpiBuilder, MintV1CpiBuilder&#125;,</span><br><span class="line">            types::&#123;DataV2, PrintSupply&#125;,</span><br><span class="line">        &#125;,</span><br><span class="line">        CreateMasterEditionV3, CreateMetadataAccountsV3, Metadata,</span><br><span class="line">    &#125;,</span><br><span class="line">    token::&#123;mint_to, Mint, MintTo, Token, TokenAccount&#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-先看看代码示例"><a href="#1-先看看代码示例" class="headerlink" title="1. 先看看代码示例"></a><strong>1. 先看看代码示例</strong></h3><h4 id="第一种：anchor-spl-的-create-master-edition-v3-和-create-metadata-accounts-v3"><a href="#第一种：anchor-spl-的-create-master-edition-v3-和-create-metadata-accounts-v3" class="headerlink" title="第一种：anchor_spl 的 create_master_edition_v3 和 create_metadata_accounts_v3"></a>第一种：anchor_spl 的 create_master_edition_v3 和 create_metadata_accounts_v3</h4><p>主要有以下步骤：</p>
+<h5 id="创建-Master-Edition："><a href="#创建-Master-Edition：" class="headerlink" title="创建 Master Edition："></a>创建 Master Edition：</h5><p>调用 create_master_edition_v3，设置 NFT 的 Master Edition。</p>
+<p>需要传递 master_edition_account、metadata_account 和 mint_account。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">create_master_edition_v3</span>(</span><br><span class="line">    CpiContext::<span class="title function_ invoke__">new_with_signer</span>(</span><br><span class="line">        ctx.accounts.token_metadata_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        CreateMasterEditionV3 &#123;</span><br><span class="line">            edition: ctx.accounts.master_edition_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            payer: ctx.accounts.authority.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            mint: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            metadata: ctx.accounts.metadata_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            mint_authority: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            update_authority: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            system_program: ctx.accounts.system_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            token_program: ctx.accounts.token_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            rent: ctx.accounts.rent.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        &#125;,</span><br><span class="line">        signer_seeds,</span><br><span class="line">    ),</span><br><span class="line">    <span class="title function_ invoke__">Some</span>(<span class="number">1</span>),</span><br><span class="line">)?;</span><br></pre></td></tr></table></figure>
+
+<p>代码讲解：</p>
+<p>create_master_edition_v3 用于创建 NFT 的 Master Edition。</p>
+<p>CpiContext::new_with_signer 用于创建 CPI 上下文，并传递签名者种子。</p>
+<h5 id="创建-Metadata-账户："><a href="#创建-Metadata-账户：" class="headerlink" title="创建 Metadata 账户："></a>创建 Metadata 账户：</h5><p>调用 create_metadata_accounts_v3，设置 NFT 的名称、符号、URI 等<strong>元数据</strong>。</p>
+<p>需要手动传递 metadata_account、mint_account、payer 等账户信息。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">create_metadata_accounts_v3</span>(</span><br><span class="line">    CpiContext::<span class="title function_ invoke__">new_with_signer</span>(</span><br><span class="line">        ctx.accounts.token_metadata_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        CreateMetadataAccountsV3 &#123;</span><br><span class="line">            metadata: ctx.accounts.metadata_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            mint: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            mint_authority: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            update_authority: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            payer: ctx.accounts.authority.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            system_program: ctx.accounts.system_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            rent: ctx.accounts.rent.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        &#125;,</span><br><span class="line">        signer_seeds,</span><br><span class="line">    ),</span><br><span class="line">    DataV2 &#123;</span><br><span class="line">        name: <span class="built_in">format!</span>(<span class="string">&quot;&#123;&#125; #&#123;&#125;&quot;</span>, IbuidlNft::TOKEN_NAME.<span class="title function_ invoke__">to_string</span>(), nft_id),</span><br><span class="line">        symbol: IbuidlNft::TOKEN_SYMBOL.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        uri: IbuidlNft::TOKEN_URL.<span class="title function_ invoke__">to_string</span>(),</span><br><span class="line">        seller_fee_basis_points: <span class="number">0</span>,</span><br><span class="line">        creators: <span class="literal">None</span>,</span><br><span class="line">        collection: <span class="literal">None</span>,</span><br><span class="line">        uses: <span class="literal">None</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="literal">false</span>, <span class="comment">// Is mutable</span></span><br><span class="line">    <span class="literal">true</span>,  <span class="comment">// Update authority is signer</span></span><br><span class="line">    <span class="literal">None</span>,  <span class="comment">// Collection details</span></span><br><span class="line">)?;</span><br></pre></td></tr></table></figure>
+
+<p>代码讲解：</p>
+<p>create_metadata_accounts_v3 用于创建 NFT 的 Metadata 账户。</p>
+<p>DataV2 结构体定义了 NFT 的元数据，包括名称、符号、URI 等。</p>
+<h5 id="Mint-Token："><a href="#Mint-Token：" class="headerlink" title="Mint Token："></a>Mint Token：</h5><p>调用 mint_to，将 NFT Mint 到指定的关联 Token 账户。</p>
+<p>需要传递 mint_account、associated_token_account 和 authority。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="title function_ invoke__">mint_to</span>(</span><br><span class="line">    CpiContext::<span class="title function_ invoke__">new_with_signer</span>(</span><br><span class="line">        ctx.accounts.token_program.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        MintTo &#123;</span><br><span class="line">            mint: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            to: ctx.accounts.nft_associated_token_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">            authority: ctx.accounts.nft_mint_account.<span class="title function_ invoke__">to_account_info</span>(),</span><br><span class="line">        &#125;,</span><br><span class="line">        signer_seeds,</span><br><span class="line">    ),</span><br><span class="line">    <span class="number">1</span>, <span class="comment">// 1 token</span></span><br><span class="line">)?;</span><br></pre></td></tr></table></figure>
+
+<p>代码讲解：</p>
+<p>mint_to 用于将 NFT Mint 到指定的关联 Token 账户。</p>
+<p>CpiContext::new_with_signer 用于创建 CPI 上下文，并传递签名者种子。</p>
+<h4 id="第二种：anchor-spl-的-mpl-token-metadata-的-CreateV1CpiBuilder-和-MintV1CpiBuilder"><a href="#第二种：anchor-spl-的-mpl-token-metadata-的-CreateV1CpiBuilder-和-MintV1CpiBuilder" class="headerlink" title="第二种：anchor_spl 的 mpl_token_metadata 的 CreateV1CpiBuilder 和 MintV1CpiBuilder"></a>第二种：anchor_spl 的 mpl_token_metadata 的 CreateV1CpiBuilder 和 MintV1CpiBuilder</h4><p>主要有以下步骤：</p>
+<h5 id="创建-Metadata-和-Master-Edition："><a href="#创建-Metadata-和-Master-Edition：" class="headerlink" title="创建 Metadata 和 Master Edition："></a>创建 Metadata 和 Master Edition：</h5><p>使用 CreateV1CpiBuilder，<strong>一次性创建 Metadata 和 Master Edition</strong>, 将第一种方法的步骤1，2结合了起来。</p>
+<p>通过链式调用设置 NFT 的名称、符号、URI、打印供应量等参数。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">CreateV1CpiBuilder::<span class="title function_ invoke__">new</span>(ctx.accounts.token_metadata_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">mint</span>(ctx.accounts.nft_mint_account.<span class="title function_ invoke__">as_ref</span>(), <span class="literal">true</span>)</span><br><span class="line">    .<span class="title function_ invoke__">metadata</span>(ctx.accounts.metadata_account.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">master_edition</span>(<span class="title function_ invoke__">Some</span>(ctx.accounts.master_edition_account.<span class="title function_ invoke__">as_ref</span>()))</span><br><span class="line">    .<span class="title function_ invoke__">authority</span>(ctx.accounts.nft_mint_account.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">update_authority</span>(ctx.accounts.nft_mint_account.<span class="title function_ invoke__">as_ref</span>(), <span class="literal">true</span>)</span><br><span class="line">    .<span class="title function_ invoke__">payer</span>(ctx.accounts.authority.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">seller_fee_basis_points</span>(<span class="number">0</span>)</span><br><span class="line">    .<span class="title function_ invoke__">system_program</span>(ctx.accounts.system_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">sysvar_instructions</span>(ctx.accounts.rent.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">spl_token_program</span>(<span class="title function_ invoke__">Some</span>(ctx.accounts.token_program.<span class="title function_ invoke__">as_ref</span>()))</span><br><span class="line">    .<span class="title function_ invoke__">name</span>(IbuidlNft::TOKEN_NAME.<span class="title function_ invoke__">to_string</span>())</span><br><span class="line">    .<span class="title function_ invoke__">symbol</span>(IbuidlNft::TOKEN_SYMBOL.<span class="title function_ invoke__">to_string</span>())</span><br><span class="line">    .<span class="title function_ invoke__">uri</span>(IbuidlNft::TOKEN_URL.<span class="title function_ invoke__">to_string</span>())</span><br><span class="line">    .<span class="title function_ invoke__">print_supply</span>(PrintSupply::Zero)</span><br><span class="line">    .<span class="title function_ invoke__">invoke_signed</span>(signer_seeds)?;</span><br></pre></td></tr></table></figure>
+
+<p>代码讲解：</p>
+<p>CreateV1CpiBuilder 用于创建 Metadata 和 Master Edition。</p>
+<p>通过链式调用设置 NFT 的名称、符号、URI 等参数。</p>
+<p>invoke_signed 用于执行 CPI 调用，并传递签名者种子。</p>
+<h5 id="Mint-Token：-1"><a href="#Mint-Token：-1" class="headerlink" title="Mint Token："></a>Mint Token：</h5><p>使用 MintV1CpiBuilder，将 NFT Mint 到指定的关联 Token 账户。</p>
+<p>通过链式调用设置 Mint 的数量、接收账户和权限。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MintV1CpiBuilder::<span class="title function_ invoke__">new</span>(ctx.accounts.token_metadata_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">mint</span>(ctx.accounts.nft_mint_account.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">metadata</span>(&amp;ctx.accounts.metadata_account.<span class="title function_ invoke__">to_account_info</span>())</span><br><span class="line">    .<span class="title function_ invoke__">master_edition</span>(<span class="title function_ invoke__">Some</span>(&amp;ctx.accounts.master_edition_account.<span class="title function_ invoke__">to_account_info</span>()))</span><br><span class="line">    .<span class="title function_ invoke__">token</span>(&amp;ctx.accounts.nft_associated_token_account.<span class="title function_ invoke__">to_account_info</span>())</span><br><span class="line">    .<span class="title function_ invoke__">token_owner</span>(<span class="title function_ invoke__">Some</span>(ctx.accounts.authority.<span class="title function_ invoke__">as_ref</span>()))</span><br><span class="line">    .<span class="title function_ invoke__">payer</span>(ctx.accounts.authority.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">authority</span>(ctx.accounts.nft_mint_account.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">system_program</span>(ctx.accounts.system_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">sysvar_instructions</span>(ctx.accounts.rent.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">spl_token_program</span>(ctx.accounts.token_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">spl_ata_program</span>(ctx.accounts.associated_token_program.<span class="title function_ invoke__">as_ref</span>())</span><br><span class="line">    .<span class="title function_ invoke__">amount</span>(<span class="number">1</span>)</span><br><span class="line">    .<span class="title function_ invoke__">invoke_signed</span>(signer_seeds)?;</span><br></pre></td></tr></table></figure>
+
+<p>代码讲解：</p>
+<p>MintV1CpiBuilder 用于将 NFT Mint 到指定的关联 Token 账户。</p>
+<p>通过链式调用设置 Mint 的数量、接收账户和权限。</p>
+<p>invoke_signed 用于执行 CPI 调用，并传递签名者种子。</p>
+<h3 id="2-实践建议"><a href="#2-实践建议" class="headerlink" title="2. 实践建议."></a><strong>2. 实践建议</strong>.</h3><p>选择 <code>create_master_edition_v3</code> 和 <code>create_metadata_accounts_v3</code> 的场景：</p>
+<p>如果你需要 完全控制 NFT 创建的每个步骤。</p>
+<p>如果你对 Solana 的 CPI 和账户管理有较深的理解。</p>
+<p>如果你的项目有 复杂的定制化需求。</p>
+<p>选择 <code>CreateV1CpiBuilder</code> 和 <code>MintV1CpiBuilder</code> 的场景：</p>
+<p>如果你希望 快速开发，并且流程较为标准化。</p>
+<p>如果你需要 减少代码量，提高开发效率。</p>
+<p>如果你的项目是 批量创建 NFT 或 原型设计。</p>
+<ol start="5">
+<li>总结</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th><strong>对比项</strong></th>
+<th><strong>方法一</strong></th>
+<th><strong>方法二</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>代码结构</strong></td>
+<td>分散，多个独立 CPI 调用</td>
+<td>集中，使用 Builder 模式</td>
+</tr>
+<tr>
+<td><strong>功能实现</strong></td>
+<td>灵活，适合复杂场景</td>
+<td>简洁，适合标准化流程</td>
+</tr>
+<tr>
+<td><strong>易用性</strong></td>
+<td>较低，需要手动管理多个步骤</td>
+<td>较高，API 更直观</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>高，适合定制化需求</td>
+<td>较低，依赖于 Builder 的功能</td>
+</tr>
+<tr>
+<td><strong>性能</strong></td>
+<td>可能较高开销（多个 CPI 调用）</td>
+<td>可能较低开销（优化后的 CPI 调用）</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>复杂、定制化的 NFT 创建流程</td>
+<td>快速开发的 NFT 创建流程</td>
+</tr>
+</tbody></table>
+<p>综上所述，如果你需要 灵活性和精细控制，第一种方式 是更好的选择；如果你追求 开发效率和简洁性，第二种方式 则更为合适。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2025/02/23/nftmint/" data-id="cm7hghy0i0000icuy0w4i8obn" data-title="本地开发DEX：nft创建与mint的两种方式" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-dex" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/02/15/dex/" class="article-date">
@@ -933,95 +1065,11 @@
 
 
   
-    <article id="post-rust21" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/27/rust21/" class="article-date">
-  <time class="dt-published" datetime="2024-10-27T10:46:54.547Z" itemprop="datePublished">2024-10-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/27/rust21/">rust 学习笔记二十一 Rust中的闭包</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <h3 id="（一）概念"><a href="#（一）概念" class="headerlink" title="（一）概念"></a>（一）概念</h3><p>闭包是一个可以捕获所在环境中的变量的匿名函数，在Rust中,闭包通过||符号定义,可以像普通函数一样调用,但与函数不同,闭包可以访问外部作用域的变量。</p>
-<h3 id="（二）特点"><a href="#（二）特点" class="headerlink" title="（二）特点"></a>（二）特点</h3><ol>
-<li><p>可以捕获周围作用域的变量。</p>
-</li>
-<li><p>支持作为参数传递给其他函数。</p>
-</li>
-<li><p>可以返回闭包作为函数的返回值。</p>
-</li>
-<li><p>类型推断:闭包通常通过类型推断来确定参数和返回值的类型。</p>
-</li>
-</ol>
-<h3 id="三-定义"><a href="#三-定义" class="headerlink" title="(三)定义"></a>(三)定义</h3><h4 id="1-闭包的语法"><a href="#1-闭包的语法" class="headerlink" title="1.闭包的语法"></a>1.闭包的语法</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Let closure_name=|参数列表|-&gt;返回类型&#123;  </span><br><span class="line">    代码块</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-简单示例"><a href="#2-简单示例" class="headerlink" title="2.简单示例"></a>2.简单示例</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">let add_one = |x:i32|-&gt; i32&#123;x+1&#125;;</span><br><span class="line">println!(&quot;&#123;&#125;&quot;, add_one(5));//输出:6</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-省略类型的闭包"><a href="#3-省略类型的闭包" class="headerlink" title="3.省略类型的闭包"></a>3.省略类型的闭包</h4><p>Rust可以推断闭包的参数和返回值类型,因此在很多情况下可以省略类型声明。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">let add_one = |x| |x|+1;</span><br><span class="line">println!(&quot;&#123;&#125;&quot;,add_one(5));//输出:6</span><br></pre></td></tr></table></figure>
-
-<h3 id="（四）使用"><a href="#（四）使用" class="headerlink" title="（四）使用"></a>（四）使用</h3><h4 id="1-作为函数参数"><a href="#1-作为函数参数" class="headerlink" title="1.作为函数参数"></a>1.作为函数参数</h4><p>闭包可以作为函数的参数传递,从而实现更灵活的代码结构。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">fn apply_to_3&lt;F&gt;(f: F) -&gt; i32&#123;</span><br><span class="line">where</span><br><span class="line">F:Fn(i32)-&gt;i32,</span><br><span class="line">&#123;</span><br><span class="line">f(3)</span><br><span class="line">&#125;</span><br><span class="line">let double= |x| x * 2;</span><br><span class="line">println!(&quot;&#123;&#125;&quot;,apply_to_3(double));//输出:6</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-捕获环境变量"><a href="#2-捕获环境变量" class="headerlink" title="2. 捕获环境变量"></a>2. 捕获环境变量</h4><p>闭包可以捕获并使用其定义所在环境中的变量</p>
-<p><img src="/../assets/img/21-1.jpg" alt="图21-1" title="21-1"></p>
-<p>从图中可以看出，当闭包尝试访问外界变量x时，代码正常执行，当函数尝试访问x时，报错<code>：can&#39;t capture dynamic environment in a fn item</code></p>
-<h4 id="3-闭包的三种捕获方式"><a href="#3-闭包的三种捕获方式" class="headerlink" title="3. 闭包的三种捕获方式"></a>3. 闭包的三种捕获方式</h4><p>按值捕获:将环境变量的所有权移入闭包。</p>
-<p>按引用捕获:通过引用捕获环境变量。</p>
-<p>按可变引用捕获:通过可变引用捕获环境变量。</p>
-<p>示例:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">let mut num = 5;</span><br><span class="line">// 按引用捕获</span><br><span class="line">let add_num =  |x: i32|x + num;</span><br><span class="line">println!(&quot;&#123;&#125;&quot;,add_num(3));//输出:8</span><br><span class="line">//按可变引用捕获</span><br><span class="line">let mut change_num = |x: i32|num += x;</span><br><span class="line">change_num(5);</span><br><span class="line">println!&#123;&quot;&#123;&#125;&quot;,num&#125;;//输出:10</span><br></pre></td></tr></table></figure>
-
-<h3 id="（四）闭包原理"><a href="#（四）闭包原理" class="headerlink" title="（四）闭包原理"></a>（四）闭包原理</h3><h4 id="1-自动实现的函数类型"><a href="#1-自动实现的函数类型" class="headerlink" title="1.自动实现的函数类型"></a>1.自动实现的函数类型</h4><p>Fn、FnMut和FnOnce是Rust提供的三种函数闭包类型,分别表示按引用捕获、按可变引用捕获和按值捕获。</p>
-<h4 id="2-闭包的类型推断"><a href="#2-闭包的类型推断" class="headerlink" title="2.闭包的类型推断"></a>2.闭包的类型推断</h4><p>Rust能够根据闭包的使用上下文推断出闭包的具体类型。</p>
-<p>Fn、FnMut和FnOnce是闭包在不同情况下自动实现的为trait</p>
-<h4 id="3-生命周期与闭包"><a href="#3-生命周期与闭包" class="headerlink" title="3.生命周期与闭包"></a>3.生命周期与闭包</h4><p>闭包可以捕获引用,但需要保证引用的生命周期超过闭包的生命周期</p>
-<p>示例:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">let s=String::from(&quot;hello&quot;);</span><br><span class="line">let closure=|| println!(&quot;&#123;&#125;&quot;,s);</span><br><span class="line">closure();//正常运行,因为s在closure之前有效</span><br></pre></td></tr></table></figure>
-
-<p>创建闭包时,通过闭包对环境值的使用,Rust推断出具体使用哪个trait</p>
-<p>·所有的闭包都实现了FnOnce</p>
-<p>·没有移动捕获变量的实现了FnMut</p>
-<p>·无需可变访问频获变量的闭包实现了Fn</p>
-<h3 id="（五）move关键字"><a href="#（五）move关键字" class="headerlink" title="（五）move关键字"></a>（五）move关键字</h3><p>在参数列表前使用move关键字,可以强制闭包取得它所使用的环境值的所有权，当将闭包传递给新线程以移动数据使其归新线程所有时,此技术最为有用。</p>
-<p>例子</p>
-<p><img src="/../assets/img/21-2.jpg" alt="图21-2" title="21-2"></p>
-<p>如图所示，闭包获取了外界值x和y的所有权，之后二者都不能在打印</p>
-<h3 id="六-实践"><a href="#六-实践" class="headerlink" title="(六) 实践"></a>(六) 实践</h3><p>实现PageCache结构体:<br>该结构体应缓存根据用户ID和文章ID渲染的页面。<br>你需要为该结构体实现一个get_page方法,该方法接受用户ID和文章ID,并返回演染后的页面内容。<br>如果相同的用户ID和文章ID已经渲染过,则get_page应直接返回缓存的页面,而不是重新渲染。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">use std::collections::HashMap;</span><br><span class="line"></span><br><span class="line">// 定义 PageCache 结构体</span><br><span class="line">struct PageCache&lt;F&gt;</span><br><span class="line">where</span><br><span class="line">    F: Fn(&amp;str, &amp;u32) -&gt; String,</span><br><span class="line">&#123;</span><br><span class="line">    render_page: F,</span><br><span class="line">    cache: HashMap&lt;(String, u32), String&gt;,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">impl&lt;F&gt; PageCache&lt;F&gt;</span><br><span class="line">where</span><br><span class="line">    F: Fn(&amp;str, &amp;u32) -&gt; String,</span><br><span class="line">&#123;</span><br><span class="line">    // 实现构造器方法</span><br><span class="line">    fn new(render_page: F) -&gt; Self &#123;</span><br><span class="line">        PageCache &#123;</span><br><span class="line">            render_page,</span><br><span class="line">            cache: HashMap::new(),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 实现 get_page 方法</span><br><span class="line">    fn get_page(&amp;mut self, user_id: &amp;str, article_id: u32) -&gt; String &#123;</span><br><span class="line">        let key = (user_id.to_string(), article_id);</span><br><span class="line">        if !self.cache.contains_key(&amp;key) &#123;</span><br><span class="line">            let rendered_page = (self.render_page)(user_id, &amp;article_id);</span><br><span class="line">            self.cache.insert(key.clone(), rendered_page);</span><br><span class="line">        &#125;</span><br><span class="line">        self.cache.get(&amp;key).unwrap().to_string()</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn main() &#123;</span><br><span class="line">    let mut page_cache = PageCache::new(|user_id, article_id| &#123;</span><br><span class="line">        println!(&quot;Rendering page for user &#123;&#125; and article &#123;&#125;&quot;, user_id, article_id);</span><br><span class="line">        format!(&quot;Rendered HTML content for user &#123;&#125; and article &#123;&#125;&quot;, user_id, article_id)</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // 第一次调用，会执行页面渲染</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;, page_cache.get_page(&quot;user1&quot;, 42)); // 输出 &quot;Rendering page for user user1 and article 42&quot; 和 &quot;Rendered HTML content for user user1 and article 42&quot;</span><br><span class="line">    // 第二次调用，直接返回缓存结果</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;, page_cache.get_page(&quot;user1&quot;, 42)); // 仅输出 &quot;Rendered HTML content for user user1 and article 42&quot;，不再渲染</span><br><span class="line">    // 不同用户查看同一文章，会重新渲染</span><br><span class="line">    println!(&quot;&#123;&#125;&quot;, page_cache.get_page(&quot;user2&quot;, 42)); // 输出 &quot;Rendering page for user user2 and article 42&quot; 和 &quot;Rendered HTML content for user user2 and article 42&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/27/rust21/" data-id="cm2rh3xgq0000y4uygydsgx14" data-title="rust 学习笔记二十一 Rust中的闭包" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
     
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
   </nav>
 
 </section>
@@ -1053,6 +1101,10 @@
       <ul>
         
           <li>
+            <a href="/2025/02/23/nftmint/">本地开发DEX：nft创建与mint的两种方式</a>
+          </li>
+        
+          <li>
             <a href="/2025/02/15/dex/">本地开发DEX：购买ETF的两种策略</a>
           </li>
         
@@ -1066,10 +1118,6 @@
         
           <li>
             <a href="/2024/11/17/solana2/">solana 学习笔记二 Solana开发入门</a>
-          </li>
-        
-          <li>
-            <a href="/2024/11/13/solana1/">solana 学习笔记一 Solana基础与环境搭建</a>
           </li>
         
       </ul>
