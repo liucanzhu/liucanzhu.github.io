@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>在Solana Devnet上 对 raydium Swap功能的应用实践 | canzhu&#39;s blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="目前在本地实现的DEX项目中，包含一个swap置换token功能，本打算用主网的raydium api完成，但是由于该api仅仅在主网有效 ，所以在 devnet 执行测试时采用了自行创建 pool 并完成swap 的方法，这里用官方demo  https:&#x2F;&#x2F;github.com&#x2F;raydium-io&#x2F;raydium-sdk-V2-demo 中的 amm pool 举例： （一） 环境准备1：获">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在Solana Devnet上 对 raydium Swap功能的应用实践">
+<meta property="og:url" content="https://liucanzhu.github.io/2025/03/18/raydium/index.html">
+<meta property="og:site_name" content="canzhu&#39;s blog">
+<meta property="og:description" content="目前在本地实现的DEX项目中，包含一个swap置换token功能，本打算用主网的raydium api完成，但是由于该api仅仅在主网有效 ，所以在 devnet 执行测试时采用了自行创建 pool 并完成swap 的方法，这里用官方demo  https:&#x2F;&#x2F;github.com&#x2F;raydium-io&#x2F;raydium-sdk-V2-demo 中的 amm pool 举例： （一） 环境准备1：获">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-03-18T12:05:04.023Z">
+<meta property="article:modified_time" content="2025-03-18T13:49:59.627Z">
+<meta property="article:author" content="Liu Canzhu">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="canzhu's blog" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">canzhu&#39;s blog</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://liucanzhu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-raydium" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/03/18/raydium/" class="article-date">
+  <time class="dt-published" datetime="2025-03-18T12:05:04.023Z" itemprop="datePublished">2025-03-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      在Solana Devnet上 对 raydium Swap功能的应用实践
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>目前在本地实现的DEX项目中，包含一个swap置换token功能，本打算用主网的raydium api完成，但是由于该api仅仅在主网有效 ，所以在 devnet 执行测试时采用了自行创建 pool 并完成swap 的方法，这里用官方demo  <a target="_blank" rel="noopener" href="https://github.com/raydium-io/raydium-sdk-V2-demo">https://github.com/raydium-io/raydium-sdk-V2-demo</a> 中的 <strong>amm pool</strong> 举例：</p>
+<h3 id="（一）-环境准备"><a href="#（一）-环境准备" class="headerlink" title="（一） 环境准备"></a>（一） 环境准备</h3><h4 id="1：获取token"><a href="#1：获取token" class="headerlink" title="1：获取token"></a>1：获取token</h4><p>获为了在 devnet 上测试交换，最好创建两个带有供应的 SPL 代币并使用它。可以通过spl-token自行创建代币并mint对应数量，因为创建池子的前提是你的钱包里至少有对应数量的两种token（或者用空投到的wsol, usdc也可以, 这里附上一个领取devnet上usdc token空投的网址：<a target="_blank" rel="noopener" href="https://spl-token-faucet.com/?token-name=USDC">https://spl-token-faucet.com/?token-name=USDC</a>)</p>
+<h4 id="2：配置Raydium-SDK"><a href="#2：配置Raydium-SDK" class="headerlink" title="2：配置Raydium SDK"></a>2：配置Raydium SDK</h4><p>修改config.ts中的钱包和RPC connetion配置, 并将创建raydium 实例中的对应mainnet配置项改为devnet</p>
+<h3 id="（二）-创建与交易"><a href="#（二）-创建与交易" class="headerlink" title="（二） 创建与交易"></a>（二） 创建与交易</h3><h4 id="1：-创建交易市场（createMarket）"><a href="#1：-创建交易市场（createMarket）" class="headerlink" title="1： 创建交易市场（createMarket）"></a>1： 创建交易市场（createMarket）</h4><p>作用：建立代币交易对的市场订单簿</p>
+<p>代码如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">createMarket</span> = <span class="keyword">async</span> (<span class="params"></span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> raydium = <span class="keyword">await</span> <span class="title function_">getRaydiumInstance</span>() <span class="comment">// 获取raydium实例</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> &#123; execute, extInfo, transactions &#125; = <span class="keyword">await</span> raydium.<span class="property">marketV2</span>.<span class="title function_">create</span>(&#123;</span><br><span class="line">      <span class="attr">baseInfo</span>: &#123;</span><br><span class="line">        <span class="attr">mint</span>: <span class="keyword">new</span> <span class="title class_">PublicKey</span>(<span class="string">&quot;token address&quot;</span>),</span><br><span class="line">        <span class="attr">decimals</span>: <span class="number">9</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">quoteInfo</span>: &#123;</span><br><span class="line">        <span class="attr">mint</span>: <span class="keyword">new</span> <span class="title class_">PublicKey</span>(<span class="string">&quot;token address&quot;</span>),</span><br><span class="line">        <span class="attr">decimals</span>: <span class="number">9</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">lotSize</span>: <span class="number">0.1</span>,</span><br><span class="line">      <span class="attr">tickSize</span>: <span class="number">0.0001</span>,  </span><br><span class="line">      <span class="attr">dexProgramId</span>: <span class="variable constant_">DEVNET_PROGRAM_ID</span>.<span class="property">OPENBOOK_MARKET</span>,</span><br><span class="line">      <span class="attr">computeBudgetConfig</span>: &#123;</span><br><span class="line">        <span class="attr">units</span>: <span class="number">600000</span>,  </span><br><span class="line">        <span class="attr">microLamports</span>: <span class="number">10000</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">txVersion</span>: <span class="number">0</span>,  </span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(</span><br><span class="line">      <span class="string">`create market total <span class="subst">$&#123;transactions.length&#125;</span> txs, market info: `</span>,</span><br><span class="line">      <span class="title class_">Object</span>.<span class="title function_">keys</span>(extInfo.<span class="property">address</span>).<span class="title function_">reduce</span>(</span><br><span class="line">        <span class="function">(<span class="params">acc, cur</span>) =&gt;</span> (&#123;</span><br><span class="line">          ...acc,</span><br><span class="line">          [cur]: extInfo.<span class="property">address</span>[cur <span class="keyword">as</span> keyof <span class="keyword">typeof</span> extInfo.<span class="property">address</span>].<span class="title function_">toBase58</span>(),</span><br><span class="line">        &#125;),</span><br><span class="line">        &#123;&#125;</span><br><span class="line">      )</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;Attempting to execute transactions...&#x27;</span>)</span><br><span class="line">    <span class="keyword">const</span> txIds = <span class="keyword">await</span> <span class="title function_">execute</span>(&#123;</span><br><span class="line">      <span class="attr">sequentially</span>: <span class="literal">true</span>,</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;create market txIds:&#x27;</span>, txIds)</span><br><span class="line"></span><br><span class="line">  &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">    <span class="keyword">throw</span> error</span><br><span class="line">  &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    process.<span class="title function_">exit</span>()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 添加主函数的错误处理</span></span><br><span class="line"><span class="keyword">const</span> <span class="title function_">main</span> = <span class="keyword">async</span> (<span class="params"></span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">await</span> <span class="title function_">createMarket</span>()</span><br><span class="line">  &#125; <span class="keyword">catch</span> (error) &#123;</span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">error</span>(<span class="string">&#x27;Fatal error:&#x27;</span>, error)</span><br><span class="line">    process.<span class="title function_">exit</span>(<span class="number">1</span>) <span class="comment">// 使用非零状态码退出</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="title function_">main</span>()</span><br></pre></td></tr></table></figure>
+<p>原理：</p>
+<p>通过OpenBook协议创建订单簿市场</p>
+<p>lotSize 和 tickSize 决定了交易的精度和价格间隔</p>
+<p>生成marketId作为市场的唯一标识</p>
+<h4 id="2-创建AMM流动性池（createAmmPool）"><a href="#2-创建AMM流动性池（createAmmPool）" class="headerlink" title="2: 创建AMM流动性池（createAmmPool）"></a>2: 创建AMM流动性池（createAmmPool）</h4><p>作用：为交易对注入初始流动性</p>
+<p>根据官方提示和刚才得出的marketid, 以及自身钱包余额修改参数：</p>
+<p>代码如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">createAmmPool</span> = <span class="keyword">async</span> (<span class="params"></span>) =&gt; &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> raydium = <span class="keyword">await</span> <span class="title function_">getRaydiumInstance</span>()</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> marketId = <span class="keyword">new</span> <span class="title class_">PublicKey</span>(<span class="string">&quot;your market id&quot;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> marketBufferInfo = <span class="keyword">await</span> raydium.<span class="property">connection</span>.<span class="title function_">getAccountInfo</span>(<span class="keyword">new</span> <span class="title class_">PublicKey</span>(marketId))</span><br><span class="line">  <span class="keyword">const</span> &#123; baseMint, quoteMint &#125; = <span class="variable constant_">MARKET_STATE_LAYOUT_V3</span>.<span class="title function_">decode</span>(marketBufferInfo!.<span class="property">data</span>)<span class="comment">// 根据id读取订单薄信息</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> baseMintInfo = <span class="keyword">await</span> raydium.<span class="property">token</span>.<span class="title function_">getTokenInfo</span>(baseMint)</span><br><span class="line">  <span class="keyword">const</span> quoteMintInfo = <span class="keyword">await</span> raydium.<span class="property">token</span>.<span class="title function_">getTokenInfo</span>(quoteMint)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> baseAmount = <span class="keyword">new</span> <span class="title function_">BN</span>(); <span class="comment">// 钱包余额需大于输入值</span></span><br><span class="line">  <span class="keyword">const</span> quoteAmount = <span class="keyword">new</span> <span class="title function_">BN</span>(); <span class="comment">// 钱包余额需大于输入值</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (</span><br><span class="line">    baseMintInfo.<span class="property">programId</span> !== <span class="variable constant_">TOKEN_PROGRAM_ID</span>.<span class="title function_">toBase58</span>() ||</span><br><span class="line">    quoteMintInfo.<span class="property">programId</span> !== <span class="variable constant_">TOKEN_PROGRAM_ID</span>.<span class="title function_">toBase58</span>()</span><br><span class="line">  ) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(</span><br><span class="line">      <span class="string">&#x27;amm pools with openbook market only support TOKEN_PROGRAM_ID mints, if you want to create pool with token-2022, please create cpmm pool instead&#x27;</span></span><br><span class="line">    )</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (baseAmount.<span class="title function_">mul</span>(quoteAmount).<span class="title function_">lte</span>(<span class="keyword">new</span> <span class="title function_">BN</span>(<span class="number">1</span>).<span class="title function_">mul</span>(<span class="keyword">new</span> <span class="title function_">BN</span>(<span class="number">10</span> ** baseMintInfo.<span class="property">decimals</span>)).<span class="title function_">pow</span>(<span class="keyword">new</span> <span class="title function_">BN</span>(<span class="number">2</span>)))) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;initial liquidity too low, try adding more baseAmount/quoteAmount&#x27;</span>)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> &#123; execute, extInfo &#125; = <span class="keyword">await</span> raydium.<span class="property">liquidity</span>.<span class="title function_">createPoolV4</span>(&#123;</span><br><span class="line">    <span class="comment">// programId: AMM_V4,</span></span><br><span class="line">    <span class="attr">programId</span>: <span class="variable constant_">DEVNET_PROGRAM_ID</span>.<span class="property">AmmV4</span>, <span class="comment">// devnet</span></span><br><span class="line">    <span class="attr">marketInfo</span>: &#123;</span><br><span class="line">      marketId,</span><br><span class="line">      <span class="comment">// programId: OPEN_BOOK_PROGRAM,</span></span><br><span class="line">      <span class="attr">programId</span>: <span class="variable constant_">DEVNET_PROGRAM_ID</span>.<span class="property">OPENBOOK_MARKET</span>, <span class="comment">// devent</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">baseMintInfo</span>: &#123;</span><br><span class="line">      <span class="attr">mint</span>: baseMint,</span><br><span class="line">      <span class="attr">decimals</span>: baseMintInfo.<span class="property">decimals</span>, <span class="comment">// if you know mint decimals here, can pass number directly</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">quoteMintInfo</span>: &#123;</span><br><span class="line">      <span class="attr">mint</span>: quoteMint,</span><br><span class="line">      <span class="attr">decimals</span>: quoteMintInfo.<span class="property">decimals</span>, <span class="comment">// if you know mint decimals here, can pass number directly</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">baseAmount</span>: baseAmount,</span><br><span class="line">    <span class="attr">quoteAmount</span>: quoteAmount,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// sol devnet faucet: https://faucet.solana.com/</span></span><br><span class="line">    <span class="comment">// baseAmount: new BN(4 * 10 ** 9), // if devent pool with sol/wsol, better use amount &gt;= 4*10**9</span></span><br><span class="line">    <span class="comment">// quoteAmount: new BN(4 * 10 ** 9), // if devent pool with sol/wsol, better use amount &gt;= 4*10**9</span></span><br><span class="line"></span><br><span class="line">    <span class="attr">startTime</span>: <span class="keyword">new</span> <span class="title function_">BN</span>(<span class="number">0</span>), <span class="comment">// unit in seconds</span></span><br><span class="line">    <span class="attr">ownerInfo</span>: &#123;</span><br><span class="line">      <span class="attr">useSOLBalance</span>: <span class="literal">true</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">associatedOnly</span>: <span class="literal">false</span>,</span><br><span class="line">    txVersion,</span><br><span class="line">    <span class="comment">// feeDestinationId: FEE_DESTINATION_ID,</span></span><br><span class="line">    <span class="attr">feeDestinationId</span>: <span class="variable constant_">DEVNET_PROGRAM_ID</span>.<span class="property">FEE_DESTINATION_ID</span>, <span class="comment">// devnet</span></span><br><span class="line">    <span class="comment">// optional: set up priority fee here</span></span><br><span class="line">    <span class="comment">// computeBudgetConfig: &#123;</span></span><br><span class="line">    <span class="comment">//   units: 600000,</span></span><br><span class="line">    <span class="comment">//   microLamports: 4659150,</span></span><br><span class="line">    <span class="comment">// &#125;,</span></span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// don&#x27;t want to wait confirm, set sendAndConfirm to false or don&#x27;t pass any params to execute</span></span><br><span class="line">  <span class="keyword">const</span> &#123; txId &#125; = <span class="keyword">await</span> <span class="title function_">execute</span>(&#123; <span class="attr">sendAndConfirm</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(</span><br><span class="line">    <span class="string">&#x27;amm pool created! txId: &#x27;</span>,</span><br><span class="line">    txId,</span><br><span class="line">    <span class="string">&#x27;, poolKeys:&#x27;</span>,</span><br><span class="line">    <span class="title class_">Object</span>.<span class="title function_">keys</span>(extInfo.<span class="property">address</span>).<span class="title function_">reduce</span>(</span><br><span class="line">      <span class="function">(<span class="params">acc, cur</span>) =&gt;</span> (&#123;</span><br><span class="line">        ...acc,</span><br><span class="line">        [cur]: extInfo.<span class="property">address</span>[cur <span class="keyword">as</span> keyof <span class="keyword">typeof</span> extInfo.<span class="property">address</span>].<span class="title function_">toBase58</span>(),</span><br><span class="line">      &#125;),</span><br><span class="line">      &#123;&#125;</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line">  process.<span class="title function_">exit</span>() <span class="comment">// if you don&#x27;t want to end up node execution, comment this line</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** uncomment code below to execute */</span></span><br><span class="line"><span class="title function_">createAmmPool</span>()</span><br></pre></td></tr></table></figure>
+<p>AMM机制：</p>
+<p>基于恒定乘积公式 x * y &#x3D; k 确定价格</p>
+<p>初始流动性比例决定代币的初始汇率</p>
+<p>流动性提供者（LP）获得池子份额代币，在这一步后可以看到钱包中已经有了份额代币</p>
+<h4 id="3-执行代币交换（swap）"><a href="#3-执行代币交换（swap）" class="headerlink" title="3: 执行代币交换（swap）"></a>3: 执行代币交换（swap）</h4><p>作用：实现代币间的自动做市商交易</p>
+<p>代码如下：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">const</span> <span class="title function_">swap</span> = <span class="keyword">async</span> (<span class="params"></span>) =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> raydium = <span class="keyword">await</span> <span class="title function_">getRaydiumInstance</span>()</span><br><span class="line">  <span class="keyword">const</span> amountIn = </span><br><span class="line">  <span class="keyword">const</span> inputMint = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="keyword">const</span> poolId = <span class="string">&#x27;&#x27;</span> </span><br><span class="line"></span><br><span class="line">  <span class="keyword">let</span> <span class="attr">poolInfo</span>: <span class="title class_">ApiV3PoolInfoStandardItem</span> | <span class="literal">undefined</span></span><br><span class="line">  <span class="keyword">let</span> <span class="attr">poolKeys</span>: <span class="title class_">AmmV4Keys</span> | <span class="literal">undefined</span></span><br><span class="line">  <span class="keyword">let</span> <span class="attr">rpcData</span>: <span class="title class_">AmmRpcData</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (raydium.<span class="property">cluster</span> === <span class="string">&#x27;mainnet&#x27;</span>) &#123;</span><br><span class="line">    <span class="comment">// note: api doesn&#x27;t support get devnet pool info, so in devnet else we go rpc method</span></span><br><span class="line">    <span class="comment">// if you wish to get pool info from rpc, also can modify logic to go rpc method directly</span></span><br><span class="line">    <span class="keyword">const</span> data = <span class="keyword">await</span> raydium.<span class="property">api</span>.<span class="title function_">fetchPoolById</span>(&#123; <span class="attr">ids</span>: poolId &#125;)</span><br><span class="line">    poolInfo = data[<span class="number">0</span>] <span class="keyword">as</span> <span class="title class_">ApiV3PoolInfoStandardItem</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="title function_">isValidAmm</span>(poolInfo.<span class="property">programId</span>)) <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;target pool is not AMM pool&#x27;</span>)</span><br><span class="line">    poolKeys = <span class="keyword">await</span> raydium.<span class="property">liquidity</span>.<span class="title function_">getAmmPoolKeys</span>(poolId)</span><br><span class="line">    rpcData = <span class="keyword">await</span> raydium.<span class="property">liquidity</span>.<span class="title function_">getRpcPoolInfo</span>(poolId)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// note: getPoolInfoFromRpc method only return required pool data for computing not all detail pool info</span></span><br><span class="line">    <span class="keyword">const</span> data = <span class="keyword">await</span> raydium.<span class="property">liquidity</span>.<span class="title function_">getPoolInfoFromRpc</span>(&#123; poolId &#125;)</span><br><span class="line">    poolInfo = data.<span class="property">poolInfo</span></span><br><span class="line">    poolKeys = data.<span class="property">poolKeys</span></span><br><span class="line">    rpcData = data.<span class="property">poolRpcData</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">const</span> [baseReserve, quoteReserve, status] = [rpcData.<span class="property">baseReserve</span>, rpcData.<span class="property">quoteReserve</span>, rpcData.<span class="property">status</span>.<span class="title function_">toNumber</span>()]</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (poolInfo.<span class="property">mintA</span>.<span class="property">address</span> !== inputMint &amp;&amp; poolInfo.<span class="property">mintB</span>.<span class="property">address</span> !== inputMint)</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">Error</span>(<span class="string">&#x27;input mint does not match pool&#x27;</span>)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> baseIn = inputMint === poolInfo.<span class="property">mintA</span>.<span class="property">address</span></span><br><span class="line">  <span class="keyword">const</span> [mintIn, mintOut] = baseIn ? [poolInfo.<span class="property">mintA</span>, poolInfo.<span class="property">mintB</span>] : [poolInfo.<span class="property">mintB</span>, poolInfo.<span class="property">mintA</span>]</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> out = raydium.<span class="property">liquidity</span>.<span class="title function_">computeAmountOut</span>(&#123;</span><br><span class="line">    <span class="attr">poolInfo</span>: &#123;</span><br><span class="line">      ...poolInfo,</span><br><span class="line">      baseReserve,</span><br><span class="line">      quoteReserve,</span><br><span class="line">      status,</span><br><span class="line">      <span class="attr">version</span>: <span class="number">4</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">amountIn</span>: <span class="keyword">new</span> <span class="title function_">BN</span>(amountIn * <span class="number">10</span> ** <span class="number">9</span>),</span><br><span class="line">    <span class="attr">mintIn</span>: mintIn.<span class="property">address</span>,</span><br><span class="line">    <span class="attr">mintOut</span>: mintOut.<span class="property">address</span>,</span><br><span class="line">    <span class="attr">slippage</span>: <span class="number">0.05</span>, <span class="comment">// range: 1 ~ 0.0001, means 100% ~ 0.01%</span></span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(</span><br><span class="line">    <span class="string">`computed swap <span class="subst">$&#123;<span class="keyword">new</span> Decimal(amountIn)</span></span></span><br><span class="line"><span class="subst"><span class="string">      .div(<span class="number">10</span> ** mintIn.decimals)</span></span></span><br><span class="line"><span class="subst"><span class="string">      .toDecimalPlaces(mintIn.decimals)</span></span></span><br><span class="line"><span class="subst"><span class="string">      .toString()&#125;</span> <span class="subst">$&#123;mintIn.<span class="built_in">symbol</span> || mintIn.address&#125;</span> to <span class="subst">$&#123;<span class="keyword">new</span> Decimal(out.amountOut.toString())</span></span></span><br><span class="line"><span class="subst"><span class="string">        .div(<span class="number">10</span> ** mintOut.decimals)</span></span></span><br><span class="line"><span class="subst"><span class="string">        .toDecimalPlaces(mintOut.decimals)</span></span></span><br><span class="line"><span class="subst"><span class="string">        .toString()&#125;</span> <span class="subst">$&#123;mintOut.<span class="built_in">symbol</span> || mintOut.address&#125;</span>, minimum amount out <span class="subst">$&#123;<span class="keyword">new</span> Decimal(out.minAmountOut.toString())</span></span></span><br><span class="line"><span class="subst"><span class="string">          .div(<span class="number">10</span> ** mintOut.decimals)</span></span></span><br><span class="line"><span class="subst"><span class="string">          .toDecimalPlaces(mintOut.decimals)&#125;</span> <span class="subst">$&#123;mintOut.<span class="built_in">symbol</span> || mintOut.address&#125;</span>`</span></span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> &#123; execute &#125; = <span class="keyword">await</span> raydium.<span class="property">liquidity</span>.<span class="title function_">swap</span>(&#123;</span><br><span class="line">    poolInfo,</span><br><span class="line">    poolKeys,</span><br><span class="line">    <span class="attr">amountIn</span>: <span class="keyword">new</span> <span class="title function_">BN</span>(amountIn * <span class="number">10</span> ** <span class="number">9</span>),</span><br><span class="line">    <span class="attr">amountOut</span>: out.<span class="property">minAmountOut</span>, <span class="comment">// out.amountOut means amount &#x27;without&#x27; slippage</span></span><br><span class="line">    <span class="attr">fixedSide</span>: <span class="string">&#x27;in&#x27;</span>,</span><br><span class="line">    <span class="attr">inputMint</span>: mintIn.<span class="property">address</span>,</span><br><span class="line">    txVersion,</span><br><span class="line">    <span class="attr">config</span>: &#123;</span><br><span class="line">      <span class="attr">associatedOnly</span>: <span class="literal">false</span>, <span class="comment">// 允许自动创建非关联账户（若设为 true，则必须已有 ATA）</span></span><br><span class="line">      <span class="attr">outputUseSolBalance</span>: <span class="literal">false</span>, <span class="comment">// 禁用直接使用 SOL 余额接收代币（强制创建 ATA）</span></span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// optional: set up token account</span></span><br><span class="line">    <span class="comment">// config: &#123;</span></span><br><span class="line">    <span class="comment">//   inputUseSolBalance: true, // default: true, if you want to use existed wsol token account to pay token in, pass false</span></span><br><span class="line">    <span class="comment">//   outputUseSolBalance: true, // default: true, if you want to use existed wsol token account to receive token out, pass false</span></span><br><span class="line">    <span class="comment">//   associatedOnly: true, // default: true, if you want to use ata only, pass true</span></span><br><span class="line">    <span class="comment">// &#125;,</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// optional: set up priority fee here</span></span><br><span class="line">    <span class="comment">// computeBudgetConfig: &#123;</span></span><br><span class="line">    <span class="comment">//   units: 600000,</span></span><br><span class="line">    <span class="comment">//   microLamports: 46591500,</span></span><br><span class="line">    <span class="comment">// &#125;,</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// optional: add transfer sol to tip account instruction. e.g sent tip to jito</span></span><br><span class="line">    <span class="comment">// txTipConfig: &#123;</span></span><br><span class="line">    <span class="comment">//   address: new PublicKey(&#x27;96gYZGLnJYVFmbjzopPSU6QiEV5fGqZNyN9nmNhvrZU5&#x27;),</span></span><br><span class="line">    <span class="comment">//   amount: new BN(10000000), // 0.01 sol</span></span><br><span class="line">    <span class="comment">// &#125;,</span></span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="title function_">printSimulateInfo</span>()</span><br><span class="line">  <span class="comment">// don&#x27;t want to wait confirm, set sendAndConfirm to false or don&#x27;t pass any params to execute</span></span><br><span class="line">  <span class="keyword">const</span> &#123; txId &#125; = <span class="keyword">await</span> <span class="title function_">execute</span>(&#123; <span class="attr">sendAndConfirm</span>: <span class="literal">true</span> &#125;)</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`swap successfully in amm pool:`</span>, &#123; <span class="attr">txId</span>: <span class="string">`https://explorer.solana.com/tx/<span class="subst">$&#123;txId&#125;</span>`</span> &#125;)</span><br><span class="line"></span><br><span class="line">  process.<span class="title function_">exit</span>() <span class="comment">// if you don&#x27;t want to end up node execution, comment this line</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** uncomment code below to execute */</span></span><br><span class="line"><span class="title function_">swap</span>()</span><br></pre></td></tr></table></figure>
+
+<h4 id="执行过程："><a href="#执行过程：" class="headerlink" title="执行过程："></a>执行过程：</h4><p>根据当前池子储备计算预期输出</p>
+<p>应用滑点保护确定最小可接受量</p>
+<p>通过Raydium的AMM V4程序执行链上交换</p>
+<h4 id="常见问题排查"><a href="#常见问题排查" class="headerlink" title="常见问题排查"></a>常见问题排查</h4><h5 id="交易失败：计算资源不足"><a href="#交易失败：计算资源不足" class="headerlink" title="交易失败：计算资源不足"></a>交易失败：计算资源不足</h5><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">computeBudgetConfig</span>: &#123;</span><br><span class="line">  <span class="attr">units</span>: <span class="number">600000</span>,      <span class="comment">// 增加计算单元</span></span><br><span class="line">  <span class="attr">microLamports</span>: <span class="number">10000</span> <span class="comment">// 提高优先级费用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="代币类型不匹配"><a href="#代币类型不匹配" class="headerlink" title="代币类型不匹配"></a>代币类型不匹配</h5><p>检查代币的programId是否为TOKEN_PROGRAM_ID</p>
+<p>Token-2022代币需使用CPMM池类型</p>
+<h5 id="流动性不足错误"><a href="#流动性不足错误" class="headerlink" title="流动性不足错误"></a>流动性不足错误</h5><p>确保初始流动性满足 baseAmount * quoteAmount ≥ (1e9)^2</p>
+<p>顺利的话，执行完swap之后就可以观察到账户中 in 和 out token 在按照amm池计算出来的汇率变化了</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2025/03/18/raydium/" data-id="cm8ejx85p00003wuyewb43pyv" data-title="在Solana Devnet上 对 raydium Swap功能的应用实践" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/02/23/nftmint/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">本地开发DEX：nft创建与mint的两种方式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/03/">March 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/02/">February 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/03/18/raydium/">在Solana Devnet上 对 raydium Swap功能的应用实践</a>
+          </li>
+        
+          <li>
+            <a href="/2025/02/23/nftmint/">本地开发DEX：nft创建与mint的两种方式</a>
+          </li>
+        
+          <li>
+            <a href="/2025/02/15/dex/">本地开发DEX：购买ETF的两种策略</a>
+          </li>
+        
+          <li>
+            <a href="/2024/11/26/solana4/">solana 学习笔记四 Solana基础 - Token解析&amp;创建</a>
+          </li>
+        
+          <li>
+            <a href="/2024/11/21/solana3/">solana 学习笔记三 Solana基础，账户与简单交互</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2025 Liu Canzhu<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

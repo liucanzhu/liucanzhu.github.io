@@ -69,6 +69,127 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-rust12" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/09/21/rust12/" class="article-date">
+  <time class="dt-published" datetime="2024-09-21T09:29:21.620Z" itemprop="datePublished">2024-09-21</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2024/09/21/rust12/">rust 学习笔记十三 Rust 中的集合</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Rust中的集合主要分为两类， Vector和HashMap</p>
+<h3 id="（一）Vector"><a href="#（一）Vector" class="headerlink" title="（一）Vector"></a>（一）Vector</h3><p>什么是模式匹配:模式匹配是一种强大的功能,可以检查数据的结构并进行相应操作。</p>
+<p>为什么使用模式匹配:提高代码的可读性和简洁性,减少错误,尤其是在处理复杂数据结构时。</p>
+<p>举例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    <span class="built_in">let</span> number = 13;</span><br><span class="line">    match number &#123;</span><br><span class="line">    1=&gt;println!(<span class="string">&quot;One!&quot;</span>),</span><br><span class="line">    2=&gt;println!(<span class="string">&quot;Two!&quot;</span>),</span><br><span class="line">    3=&gt;println! (<span class="string">&quot;Three!&quot;</span>),</span><br><span class="line">    _=&gt;println!(<span class="string">&quot;Something else!&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="（二）模式匹配的各种模式"><a href="#（二）模式匹配的各种模式" class="headerlink" title="（二）模式匹配的各种模式"></a>（二）模式匹配的各种模式</h3><p>1.字面量模式</p>
+<p>最为常见，上面举的基础例子就是字面量模式，<strong>必须穷举</strong>,列出所有可能性,通常与通配符模式搭配使用</p>
+<p>2.变量模式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> x= 42;</span><br><span class="line">match x&#123;</span><br><span class="line">    var =&gt; println!(<span class="string">&quot;The value is:&#123;&#125;&quot;</span>,var),</span><br><span class="line">&#125;</span><br><span class="line">println!(<span class="string">&quot;&#123;&#125;&quot;</span>,x);</span><br></pre></td></tr></table></figure>
+
+<p>当变量为i32类型时，可以正常工作，当变量为没实现Copy trait的String类型时,存在报错：</p>
+<p><img src="/../assets/img/12-1.jpg" alt="图12-1" title="12-1"></p>
+<p>因为发生了所有权的转移</p>
+<p>3.通配符模式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">match x&#123;</span><br><span class="line">_=&gt; println!(<span class="string">&quot;Any value&quot;</span>),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>4.结构模式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">fn <span class="function"><span class="title">main</span></span>() &#123;</span><br><span class="line">    struct Point&#123;x:i32,y:i32&#125;</span><br><span class="line">    <span class="built_in">let</span> p = Point&#123;x:0,y:7&#125;;</span><br><span class="line">    match p &#123;</span><br><span class="line">        Point&#123;x,y:0&#125; =&gt; println!(<span class="string">&quot;On the x axis at &#123;&#125;&quot;</span>,x),</span><br><span class="line">        Point&#123;x:0,y&#125; =&gt; println!(<span class="string">&quot;On the y axis at &#123;&#125;&quot;</span>,y),</span><br><span class="line">        Point&#123;x,y&#125;=&gt;println!(<span class="string">&quot;On neither axis:(&#123;&#125;,&#123;&#125;)&quot;</span>,x,y),</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>将会在第一个匹配到的项中输出,其余的元组模式、枚举模式、解构模式都与之类似,需要在匹配项中解构</p>
+<p>5.守卫与绑定</p>
+<p>a.守卫:在模式匹配中,可以使用守卫来添加额外的条件判断</p>
+<p><img src="/../assets/img/12-3.jpg" alt="图12-3" title="12-3"></p>
+<p>b.绑定:在模式匹配中,可以使用绑定来将模式中的值绑定到变量上</p>
+<p><img src="/../assets/img/12-2.jpg" alt="图12-2" title="12-2"></p>
+<p>使用一个@可以规定范围,再举例一个比较复杂的枚举绑定模式：</p>
+<p><img src="/../assets/img/12-4.jpg" alt="图12-4" title="12-4"></p>
+<h3 id="（三）应用场景"><a href="#（三）应用场景" class="headerlink" title="（三）应用场景"></a>（三）应用场景</h3><p>1.处理错误</p>
+<p>原本返回Result的函数写法是：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">fn divide(a:i32,b:i32)-&gt;Result&lt;i32,String&gt;&#123;</span><br><span class="line">        <span class="keyword">if</span> b==0&#123;</span><br><span class="line">        Err(String::from(<span class="string">&quot;Cannotdivide by zero&quot;</span>))</span><br><span class="line">        &#125;<span class="keyword">else</span>&#123;</span><br><span class="line">        Ok(a/b)</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在可以改为match,更易读：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">match divide(4,2)&#123;</span><br><span class="line">    Ok(result)=&gt; println!(<span class="string">&quot;Result is &#123;&#125;&quot;</span>, result),</span><br><span class="line">    Err(e) =&gt; println!(<span class="string">&quot;Error:&#123;&#125;&quot;</span>,e),</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>解析命令行参数</li>
+<li>解析配置文件</li>
+<li>解析数据包</li>
+<li>解析XML或JSON等数据格式</li>
+</ol>
+<h3 id="（四）高级模式匹配技巧"><a href="#（四）高级模式匹配技巧" class="headerlink" title="（四）高级模式匹配技巧"></a>（四）高级模式匹配技巧</h3><p>1.嵌套模式：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">enum Message &#123;</span><br><span class="line">    Quit,</span><br><span class="line">    Move&#123;x:i32,y:i32&#125;,</span><br><span class="line">    Write(String),</span><br><span class="line">    ChangeColor(i32,i32,i32),</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">let</span> msg = Message::ChangeColor(0,160,255);</span><br><span class="line">match msg &#123;</span><br><span class="line">    Message::ChangeColor(r,g,b)=&gt;println!(<span class="string">&quot;Change the color to red &#123;&#125;, green &#123;&#125;,and blue&#123;&#125;&quot;</span>,r,g,b),</span><br><span class="line">    _=&gt;&#123;&#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>2.模式匹配与迭代器:结合iter和match使用</p>
+<p><img src="/../assets/img/12-5.jpg" alt="图12-5" title="12-5"></p>
+<p>可见将vec1和 vec2的对应元素进行了匹配</p>
+<p>3.if let 和 while let:</p>
+<p>简化单个模式匹配</p>
+<p><img src="/../assets/img/12-7.jpg" alt="图12-7" title="12-7"></p>
+<p>4.ref 和 mut ref</p>
+<p>使用场景：</p>
+<p>借用数据而不转移所有权:在某些情况下,你只需要借用数据而不是转移其所有权。例如在递归数据结构中,借用数据可以避免所有权转移带来的复杂性。</p>
+<p>对数据进行修改:使用ref mut可以在模式匹配时对数据进行修改,而无需转移所有权。</p>
+<p><img src="/../assets/img/12-6.jpg" alt="图12-6" title="12-6"></p>
+<p>附加：假设你有一个包含用户信息的JSON字符串:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="string">&quot;nane&quot;</span>:<span class="string">&quot;Alice&quot;</span>,</span><br><span class="line">    <span class="string">&quot;age&quot;</span>: 30,</span><br><span class="line">    <span class="string">&quot;email&quot;</span>: <span class="string">&quot;alicefexanple.con&quot;</span>,</span><br><span class="line">    <span class="string">&quot;address&quot;</span>:&#123;</span><br><span class="line">        <span class="string">&quot;street&quot;</span>: <span class="string">&quot;123 Main St&quot;</span>,</span><br><span class="line">        <span class="string">&quot;city&quot;</span>:<span class="string">&quot;Wonderland&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;phone_numbers&quot;</span>: [<span class="string">&quot;123-456-7890&quot;</span>, <span class="string">&quot;987-654-3210&quot;</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用 serde_json库解析JSON字符串, 使用模式匹配提取JSON对象中的不同字段, 处理不同类型的数据(字符串、数字、数组、嵌套对象等):</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">use serde_json::&#123;Value, Error&#125;;</span><br><span class="line"></span><br><span class="line">fn main() -&gt; Result&lt;(), Error&gt; &#123;</span><br><span class="line">    // JSON 字符串</span><br><span class="line">    <span class="built_in">let</span> json_str = r#<span class="string">&quot;</span></span><br><span class="line"><span class="string">        &#123;</span></span><br><span class="line"><span class="string">            &quot;</span>name<span class="string">&quot;: &quot;</span>Alice<span class="string">&quot;,</span></span><br><span class="line"><span class="string">            &quot;</span>age<span class="string">&quot;: 30,</span></span><br><span class="line"><span class="string">            &quot;</span>email<span class="string">&quot;: &quot;</span>alice@example.com<span class="string">&quot;,</span></span><br><span class="line"><span class="string">            &quot;</span>address<span class="string">&quot;: &#123;</span></span><br><span class="line"><span class="string">                &quot;</span>street<span class="string">&quot;: &quot;</span>123 Main St<span class="string">&quot;,</span></span><br><span class="line"><span class="string">                &quot;</span>city<span class="string">&quot;: &quot;</span>Wonderland<span class="string">&quot;</span></span><br><span class="line"><span class="string">            &#125;,</span></span><br><span class="line"><span class="string">            &quot;</span>phone_numbers<span class="string">&quot;: [&quot;</span>123-456-7890<span class="string">&quot;, &quot;</span>987-654-3210<span class="string">&quot;]</span></span><br><span class="line"><span class="string">        &#125;</span></span><br><span class="line"><span class="string">    &quot;</span>#;</span><br><span class="line"></span><br><span class="line">    // 解析 JSON 字符串</span><br><span class="line">    <span class="built_in">let</span> v: Value = serde_json::from_str(json_str)?;</span><br><span class="line">    println!(<span class="string">&quot;aaaa&#123;:?&#125;&quot;</span>,v);</span><br><span class="line">    // 使用模式匹配提取字段</span><br><span class="line">    match v &#123;</span><br><span class="line">        // 匹配嵌套对象</span><br><span class="line">        Value::Object(m) =&gt; &#123;</span><br><span class="line">            // 提取字符串字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(name) = m.get(<span class="string">&quot;name&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Name: &#123;&#125;&quot;</span>, name);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(email) = m.get(<span class="string">&quot;email&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Email: &#123;&#125;&quot;</span>, email);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取数字字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(age) = m.get(<span class="string">&quot;age&quot;</span>).and_then(Value::as_i64) &#123;</span><br><span class="line">                println!(<span class="string">&quot;Age: &#123;&#125;&quot;</span>, age);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取嵌套对象</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(address) = m.get(<span class="string">&quot;address&quot;</span>) &#123;</span><br><span class="line">                match address &#123;</span><br><span class="line">                    Value::Object(addr) =&gt; &#123;</span><br><span class="line">                        <span class="keyword">if</span> <span class="built_in">let</span> Some(street) = addr.get(<span class="string">&quot;street&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                            println!(<span class="string">&quot;Street: &#123;&#125;&quot;</span>, street);</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> <span class="built_in">let</span> Some(city) = addr.get(<span class="string">&quot;city&quot;</span>).and_then(Value::as_str) &#123;</span><br><span class="line">                            println!(<span class="string">&quot;City: &#123;&#125;&quot;</span>, city);</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    _ =&gt; println!(<span class="string">&quot;Address is not an object&quot;</span>),</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // 提取数组字段</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">let</span> Some(phone_numbers) = m.get(<span class="string">&quot;phone_numbers&quot;</span>) &#123;</span><br><span class="line">                match phone_numbers &#123;</span><br><span class="line">                    Value::Array(nums) =&gt; &#123;</span><br><span class="line">                        println!(<span class="string">&quot;Phone numbers:&quot;</span>);</span><br><span class="line">                        <span class="keyword">for</span> num <span class="keyword">in</span> nums &#123;</span><br><span class="line">                            <span class="keyword">if</span> <span class="built_in">let</span> Some(n) = num.<span class="function"><span class="title">as_str</span></span>() &#123;</span><br><span class="line">                                println!(<span class="string">&quot;  &#123;&#125;&quot;</span>, n);</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    _ =&gt; println!(<span class="string">&quot;Phone numbers are not an array&quot;</span>),</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        _ =&gt; println!(<span class="string">&quot;JSON is not an object&quot;</span>),</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Ok(())</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2024/09/21/rust12/" data-id="cm1bybu85000020uy38i6b4c5" data-title="rust 学习笔记十三 Rust 中的集合" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-rust11" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2024/09/20/rust11/" class="article-date">
@@ -858,86 +979,6 @@
 
 
   
-    <article id="post-rust2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/09/04/rust2/" class="article-date">
-  <time class="dt-published" datetime="2024-09-04T13:38:52.377Z" itemprop="datePublished">2024-09-04</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/09/04/rust2/">rust 学习笔记二 变量与可变性</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Rust 是一门安全性非常强的系统级语言，故了解不同种类变量的特性以及使用场景十分重要，本文主要从以下几个步骤来讲解rust中的变量与可变性:<br><strong>可变变量和不可变变量，常量，静态变量，变量遮蔽</strong>.</p>
-<h3 id="（一）可变变量和不可变变量"><a href="#（一）可变变量和不可变变量" class="headerlink" title="（一）	可变变量和不可变变量"></a>（一）	可变变量和不可变变量</h3><p>先举出示例如下：<br>直接通过    </p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> a = 32;</span><br><span class="line">println!(<span class="string">&quot;value of a is &#123;&#125;&quot;</span>, a);</span><br></pre></td></tr></table></figure>
-<p>为变量a赋值为正整数32，并打印，控制台执行<code>cargo run</code>得到输出如下：.</p>
-<p><img src="/../assets/img/2-1.jpg" alt="图2-1" title="2-1"></p>
-<p>此时如果直接尝试修改a的值，会得到错误提示如下：.</p>
-<p><img src="/../assets/img/2-2.jpg" alt="图2-2" title="2-2"></p>
-<p>此时的a就是一个不可变变量，根据提示，我们可以通过在变量名前通过<strong>mut修饰</strong>将其变为一个可变变量：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">let</span> mut a = 32;</span><br></pre></td></tr></table></figure>
-<p>此时再执行<code>cargo run</code>,发现值被成功修改（会有警告，这个后文再谈），说明此时的a是一个可变变量.</p>
-<h3 id="（二）常量"><a href="#（二）常量" class="headerlink" title="（二）	常量"></a>（二）	常量</h3><p>先举出一个正确示例：.</p>
-<p><img src="/../assets/img/2-3.jpg" alt="图2-3" title="2-3"></p>
-<p>使用<code>const name:type = value</code>的解构定义即可<br>常量定义需注意以下几点：<br>定义时<strong>指定数据类型</strong>，否则报错：.</p>
-<p><img src="/../assets/img/2-4.jpg" alt="图2-4" title="2-4"></p>
-<p>变量名使用<strong>大写字母</strong>, 否则警告：.</p>
-<p><img src="/../assets/img/2-5.jpg" alt="图2-5" title="2-5"></p>
-<p>定义时必须<strong>赋初始值</strong>，否则报错：.</p>
-<p><img src="/../assets/img/2-6.jpg" alt="图2-1" title="2-6"></p>
-<p><strong>不支持重定义或者修改初始值</strong>，否则报错：.</p>
-<p><img src="/../assets/img/2-7.jpg" alt="图2-7" title="2-7"></p>
-<p>以上这些特性与js 中的常量定义有很大相似之处</p>
-<p>此外，常量与上文中的不可变变量有以下区别：</p>
-<p>常量使用<strong>const</strong>进行声明,不可变变量使用<strong>let</strong>进行声明.</p>
-<p>常量在编译时就确定了值,<strong>不能在运行时改变</strong>。不可变变量直到运行时才能确定下来.</p>
-<p>常量不可以修改,不可变变量可以通过<strong>变量遮蔽来二次定义</strong>.</p>
-<p>常量必须声明类型,不可变变量不需要声明类型.</p>
-<p>常量必须使用<strong>大写字母</strong>,不可变变量不需要.</p>
-<h3 id="（三）静态变量"><a href="#（三）静态变量" class="headerlink" title="（三）	静态变量"></a>（三）	静态变量</h3><p>先正确示例如下：.</p>
-<p><img src="/../assets/img/2-8.jpg" alt="图2-8" title="2-8"></p>
-<p>静态变量有以下特性：</p>
-<p>使用<strong>static</strong>声明，在编译时分配内存，运行时一直存在.</p>
-<p>可以在多个线程之间共享（全局变量）.</p>
-<p>一经定义之后<strong>不可更改</strong>，且也需要大写和指明类型.</p>
-<p>与上文中的常量有很多相似之处.</p>
-<p>但不同之处在于，<strong>静态变量可通过mut修饰进行修改</strong>，但是修改的代码必须放在<strong>unsafe block</strong>内，如下所示：.</p>
-<p><img src="/../assets/img/2-9.jpg" alt="图2-9" title="2-9"></p>
-<p>常量在编译时被内联,但静态变量不会。在整个程序中静态变量只有一个实例,也就是说所有引用都指向同一个地址.</p>
-<h3 id="（四）-变量遮蔽"><a href="#（四）-变量遮蔽" class="headerlink" title="（四）	 变量遮蔽"></a>（四）	 变量遮蔽</h3><p>示例如下：.</p>
-<p><img src="/../assets/img/2-10.jpg" alt="图2-10" title="2-10"><br><img src="/../assets/img/2-11.jpg" alt="图2-11" title="2-11"><br>对于变量，可以直接通过let重复定义将之前的值覆盖掉.</p>
-<p>此外，还有如下示例：.</p>
-<p><img src="/../assets/img/2-12.jpg" alt="图2-12" title="2-12"></p>
-<p>可以看出来，变量遮蔽只会在修改代码的小范围作用域内生效，并不能对外层生效.</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/09/04/rust2/" data-id="cm0sf9tq30002sguy0gr82kin" data-title="rust 学习笔记二 变量与可变性" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -961,7 +1002,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/02/">February 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/03/">March 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/02/">February 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/10/">October 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/09/">September 2024</a></li></ul>
     </div>
   </div>
 
@@ -972,6 +1013,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/03/18/raydium/">在Solana Devnet上 对 raydium Swap功能的应用实践</a>
+          </li>
         
           <li>
             <a href="/2025/02/23/nftmint/">本地开发DEX：nft创建与mint的两种方式</a>
@@ -987,10 +1032,6 @@
         
           <li>
             <a href="/2024/11/21/solana3/">solana 学习笔记三 Solana基础，账户与简单交互</a>
-          </li>
-        
-          <li>
-            <a href="/2024/11/17/solana2/">solana 学习笔记二 Solana开发入门</a>
           </li>
         
       </ul>
