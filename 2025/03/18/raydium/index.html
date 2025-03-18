@@ -14,7 +14,7 @@
 <meta property="og:description" content="目前在本地实现的DEX项目中，包含一个swap置换token功能，本打算用主网的raydium api完成，但是由于该api仅仅在主网有效 ，所以在 devnet 执行测试时采用了自行创建 pool 并完成swap 的方法，这里用官方demo  https:&#x2F;&#x2F;github.com&#x2F;raydium-io&#x2F;raydium-sdk-V2-demo 中的 amm pool 举例： （一） 环境准备1：获">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2025-03-18T12:05:04.023Z">
-<meta property="article:modified_time" content="2025-03-18T13:49:59.627Z">
+<meta property="article:modified_time" content="2025-03-18T13:53:47.176Z">
 <meta property="article:author" content="Liu Canzhu">
 <meta name="twitter:card" content="summary">
   
@@ -118,7 +118,8 @@
 <h4 id="执行过程："><a href="#执行过程：" class="headerlink" title="执行过程："></a>执行过程：</h4><p>根据当前池子储备计算预期输出</p>
 <p>应用滑点保护确定最小可接受量</p>
 <p>通过Raydium的AMM V4程序执行链上交换</p>
-<h4 id="常见问题排查"><a href="#常见问题排查" class="headerlink" title="常见问题排查"></a>常见问题排查</h4><h5 id="交易失败：计算资源不足"><a href="#交易失败：计算资源不足" class="headerlink" title="交易失败：计算资源不足"></a>交易失败：计算资源不足</h5><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">computeBudgetConfig</span>: &#123;</span><br><span class="line">  <span class="attr">units</span>: <span class="number">600000</span>,      <span class="comment">// 增加计算单元</span></span><br><span class="line">  <span class="attr">microLamports</span>: <span class="number">10000</span> <span class="comment">// 提高优先级费用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="常见问题排查"><a href="#常见问题排查" class="headerlink" title="常见问题排查"></a>常见问题排查</h4><h5 id="交易失败：计算资源不足"><a href="#交易失败：计算资源不足" class="headerlink" title="交易失败：计算资源不足"></a>交易失败：计算资源不足</h5><p>在swap函数中加上以下配置：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">computeBudgetConfig</span>: &#123;</span><br><span class="line">  <span class="attr">units</span>: <span class="number">600000</span>,      <span class="comment">// 增加计算单元</span></span><br><span class="line">  <span class="attr">microLamports</span>: <span class="number">10000</span> <span class="comment">// 提高优先级费用</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h5 id="代币类型不匹配"><a href="#代币类型不匹配" class="headerlink" title="代币类型不匹配"></a>代币类型不匹配</h5><p>检查代币的programId是否为TOKEN_PROGRAM_ID</p>
 <p>Token-2022代币需使用CPMM池类型</p>
