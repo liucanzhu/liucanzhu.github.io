@@ -69,6 +69,67 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-hardhat" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/03/30/hardhat/" class="article-date">
+  <time class="dt-published" datetime="2025-03-30T12:01:15.535Z" itemprop="datePublished">2025-03-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <h1 id="Hardhat持久化本地节点：保持合约状态的利器"><a href="#Hardhat持久化本地节点：保持合约状态的利器" class="headerlink" title="Hardhat持久化本地节点：保持合约状态的利器"></a>Hardhat持久化本地节点：保持合约状态的利器</h1><p>在智能合约开发过程中，测试是不可或缺的一环。Hardhat作为一个流行的以太坊开发环境，提供了丰富的工具和功能来帮助开发者进行合约测试。然而，在实际开发中，我们经常会遇到一个问题：如何在本地环境中保持合约的状态，以便在多次测试中使用？本文将介绍一种通过Hardhat实现持久化本地节点的方法，并探讨其优劣和适用场景。</p>
+<h2 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h2><p>在Hardhat的默认配置下，每次运行测试或脚本时，都会重新启动一个本地节点，并在测试结束后自动关闭。这意味着每次运行脚本时，合约的状态都会被重置。对于一些需要多次交互的测试场景，这种方式显然不够高效。例如，当你需要在一个脚本中部署合约，然后在另一个脚本中调用该合约时，由于节点的状态已经丢失，你将无法直接获取到之前部署的合约实例。</p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>为了解决这个问题，我们可以使用Hardhat的持久化本地节点功能。通过手动启动一个本地节点，并在该节点上进行合约部署和测试，我们可以保持合约的状态，直到手动停止节点。</p>
+<h3 id="步骤一：配置Hardhat"><a href="#步骤一：配置Hardhat" class="headerlink" title="步骤一：配置Hardhat"></a>步骤一：配置Hardhat</h3><p>首先，确保你的<code>hardhat.config.ts</code>文件中已经配置了正确的网络和分叉参数。以下是一个示例配置：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&quot;@nomicfoundation/hardhat-ethers&quot;</span>;</span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;@nomicfoundation/hardhat-toolbox&quot;</span>;</span><br><span class="line"><span class="keyword">import</span> dotenv <span class="keyword">from</span> <span class="string">&quot;dotenv&quot;</span>;</span><br><span class="line"></span><br><span class="line">dotenv.<span class="title function_">config</span>();</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">  <span class="attr">solidity</span>: <span class="string">&quot;0.8.28&quot;</span>,</span><br><span class="line">  <span class="attr">networks</span>: &#123;</span><br><span class="line">    <span class="attr">hardhat</span>: &#123;</span><br><span class="line">      <span class="attr">forking</span>: &#123;</span><br><span class="line">        <span class="attr">url</span>: <span class="string">&quot;https://eth-mainnet.g.alchemy.com/v2/xxxx&quot;</span>, <span class="comment">//可从alchemy获取 </span></span><br><span class="line">        <span class="attr">blockNumber</span>: <span class="number">22152740</span>, <span class="comment">//如果你想要测试在某个特定区块后的合约行为，你可以设置 blockNumber 为那个区块的编号。</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">chainId</span>: <span class="number">31337</span>, <span class="comment">//使用一个不与公共网络冲突的值</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">localhost</span>: &#123;</span><br><span class="line">      <span class="attr">url</span>: <span class="string">&quot;http://127.0.0.1:8545&quot;</span>,</span><br><span class="line">      <span class="attr">chainId</span>: <span class="number">31337</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment">// 其他网络配置...</span></span><br><span class="line">  &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> config;</span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤二：启动本地节点"><a href="#步骤二：启动本地节点" class="headerlink" title="步骤二：启动本地节点"></a>步骤二：启动本地节点</h3><p>在终端中运行以下命令来启动一个持久化的本地节点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx hardhat node --fork https://eth-mainnet.g.alchemy.com/v2/xxxx --fork-block-number 22152740</span><br></pre></td></tr></table></figure>
+
+<p>这将启动一个本地节点，并将其连接到主网的分叉。节点会运行在<code>http://127.0.0.1:8545</code>，直到你手动停止它。</p>
+<h3 id="步骤三：部署合约"><a href="#步骤三：部署合约" class="headerlink" title="步骤三：部署合约"></a>步骤三：部署合约</h3><p>在新的终端窗口中，运行部署脚本来部署你的合约：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx hardhat run deployments/deploy.js --network localhost</span><br></pre></td></tr></table></figure>
+
+<h3 id="步骤四：运行测试脚本"><a href="#步骤四：运行测试脚本" class="headerlink" title="步骤四：运行测试脚本"></a>步骤四：运行测试脚本</h3><p>部署完成后，你可以运行测试脚本来调用合约：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npx hardhat run <span class="built_in">test</span>/crptoetf.swap.js --network localhost</span><br></pre></td></tr></table></figure>
+
+<p>只要本地节点保持运行，合约的状态就会被保留，你可以多次运行测试脚本进行测试。</p>
+<h2 id="优缺点分析"><a href="#优缺点分析" class="headerlink" title="优缺点分析"></a>优缺点分析</h2><h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ol>
+<li><strong>保持合约状态</strong>：通过持久化的本地节点，你可以保持合约的状态，避免每次测试都要重新部署合约。</li>
+<li><strong>支持多脚本测试</strong>：你可以在不同的脚本中调用同一个合约，方便进行复杂的测试场景。</li>
+<li><strong>模拟主网环境</strong>：通过分叉主网，你可以在一个接近真实环境的环境中进行测试(可直接调用部署在主网上的合约)。</li>
+</ol>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ol>
+<li><strong>手动启动和停止</strong>：需要手动启动和停止本地节点，增加了操作的复杂性。</li>
+<li><strong>资源占用</strong>：本地节点会占用一定的系统资源，可能会影响其他任务的运行。</li>
+</ol>
+<h2 id="适用场景"><a href="#适用场景" class="headerlink" title="适用场景"></a>适用场景</h2><p>这种方法特别适合以下场景：</p>
+<ol>
+<li><strong>复杂测试</strong>：需要在多个脚本中调用同一个合约，或者需要保持合约状态进行多次交互的测试。</li>
+<li><strong>主网模拟</strong>：需要在一个接近主网的环境中进行测试，以确保合约在主网上的表现与测试环境一致。</li>
+<li><strong>开发调试</strong>：在开发过程中，需要频繁地测试和调试合约，保持合约状态可以提高开发效率。</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过使用Hardhat的持久化本地节点功能，我们可以有效地保持合约的状态，提高测试效率。虽然这种方法需要一些额外的配置和操作，但在特定的测试场景中，其带来的便利性和效率提升是显而易见的。希望本文能够帮助你在智能合约开发中更好地利用这一功能。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://liucanzhu.github.io/2025/03/30/hardhat/" data-id="cm8vmrz3m0000jwuyhd2nd022" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-raydium" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/03/18/raydium/" class="article-date">
@@ -995,60 +1056,6 @@
 
 
   
-    <article id="post-rust23" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2024/10/31/rust23/" class="article-date">
-  <time class="dt-published" datetime="2024-10-31T15:29:54.176Z" itemprop="datePublished">2024-10-31</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2024/10/31/rust23/">rust 学习笔记二十三 Rust测试</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Rust支持以下测试：</p>
-<h3 id="（一）Unit"><a href="#（一）Unit" class="headerlink" title="（一）Unit"></a>（一）Unit</h3><p>单元测试实例如下：</p>
-<p><img src="/../assets/img/23-1.jpg" alt="图23-1" title="23-1"></p>
-<p>直接点击每一个mod上方的运行符号即可执行这个测试mod并在终端查看运行结果,在mod中每一个测试函数上方，都用一个属性宏#[test]来表示这是一个单元测试，在函数中，除了用assert_eq!()来判断是否执行成功以外，也可以通过返回Result类型，如下所示：</p>
-<p><img src="/../assets/img/23-2.jpg" alt="图23-2" title="23-2"></p>
-<p>当我们在这个函数中手动抛出一个Err()时，运行结果显示测试结果失败</p>
-<p>已知暂未开发完的函数，不希望发生panic的情况下，需要在函数中调用todo!宏，并在函数上方注明    #[should_panic]，即可跳过报错，如果需要跳过整个单元测试，则需要在函数上方注明：    #[ignore]</p>
-<h3 id="（二）Integration"><a href="#（二）Integration" class="headerlink" title="（二）Integration"></a>（二）Integration</h3><p>在根目录下新建tests文件夹，创建集成测试文件，可以在这里调用src 中lib文件中的单元测试函数，然后在控制台中执行cargo test，会先挨个进行单元测试，再进行集成测试，如果只需要执行集成测试，则在cargo test后加上—test 集成文件名，因为cargo 会将tests目录下的每一个文件都识别为一个crate，也可以通过cargo test 函数名来执行争对lib文件中某一个函数的单元测试，如果不同的单元测试中有一些共同的操作，可以将这些操作封装成函数，在tests目录下再新建子目录，在其中新建mod.rs文件，将函数封装在此处，因为直接在tests中新建文件的话也会被识别为测试文件</p>
-<h3 id="（三）Docs"><a href="#（三）Docs" class="headerlink" title="（三）Docs"></a>（三）Docs</h3><p>文档测试写法如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">///Add to number</span><br><span class="line">/// #Example</span><br><span class="line">/// ```rust</span><br><span class="line">/// assert_eq!(rust_lib::add(1,1),2)</span><br><span class="line">/// ```</span><br><span class="line">/// # Panic</span><br><span class="line">/// # Errors</span><br><span class="line">/// # Safety</span><br></pre></td></tr></table></figure>
-
-<p>在终端通过<code>cargo test –doc</code>执行文档测试</p>
-<h3 id="（四）Examples"><a href="#（四）Examples" class="headerlink" title="（四）Examples"></a>（四）Examples</h3><p>当大型项目开发完后，需要写一些demo示范如何使用：在根目录下创建example目录，可以创建一个文件，在其中调用写好的方法，也可以创建一些测试用例：<br>此时可以在控制台输入<code>cargo test – example crate名</code>执行其中的测试用例，也可以通过<code>cargo test – examples</code>执行examples目录下所有测试</p>
-<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>创建一个带各种测试的crate并通过ci yaml推送到crates.io并同步更新</p>
-<p><a target="_blank" rel="noopener" href="https://github.com/liucanzhu/rust-test">https://github.com/liucanzhu/rust-test</a></p>
-<p><a target="_blank" rel="noopener" href="https://crates.io/crates/lcz-rust-test">https://crates.io/crates/lcz-rust-test</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://liucanzhu.github.io/2024/10/31/rust23/" data-id="cm2yv4hkr00002suyakob2tf2" data-title="rust 学习笔记二十三 Rust测试" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
 
 
   <nav id="page-nav">
@@ -1085,6 +1092,10 @@
       <ul>
         
           <li>
+            <a href="/2025/03/30/hardhat/">(no title)</a>
+          </li>
+        
+          <li>
             <a href="/2025/03/18/raydium/">在Solana Devnet上 对 raydium Swap功能的应用实践</a>
           </li>
         
@@ -1098,10 +1109,6 @@
         
           <li>
             <a href="/2024/11/26/solana4/">solana 学习笔记四 Solana基础 - Token解析&amp;创建</a>
-          </li>
-        
-          <li>
-            <a href="/2024/11/21/solana3/">solana 学习笔记三 Solana基础，账户与简单交互</a>
           </li>
         
       </ul>
